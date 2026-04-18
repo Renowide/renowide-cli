@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# Build output (compiled and published to npm; not committed)
+dist/
+
+# Env / secrets — never commit
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Local caches
+.cache/
+.tsbuildinfo
+*.tsbuildinfo
+
+# Coverage
+coverage/
+
+# Local runtime credentials accidentally copied into the repo
+.renowide/
+renowide-credentials*

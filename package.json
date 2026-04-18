@@ -1,0 +1,52 @@
+{
+  "name": "@renowide/cli",
+  "version": "0.1.0",
+  "description": "Command-line tool for publishing AI agents to the Renowide marketplace.",
+  "main": "dist/index.js",
+  "bin": {
+    "renowide": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json && chmod +x dist/index.js",
+    "dev": "tsx src/index.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "renowide",
+    "cli",
+    "ai-agents",
+    "mcp",
+    "marketplace"
+  ],
+  "author": "Renowide",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Renowide/renowide-cli.git"
+  },
+  "homepage": "https://renowide.com/for-developers",
+  "bugs": {
+    "url": "https://github.com/Renowide/renowide-cli/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "picocolors": "^1.0.1",
+    "prompts": "^2.4.2",
+    "yaml": "^2.5.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/prompts": "^2.4.9",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.0"
+  }
+}
