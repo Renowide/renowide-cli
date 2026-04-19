@@ -3,21 +3,31 @@
  * @renowide/cli — command-line tool for publishing agents to Renowide.
  *
  * Commands:
- *   renowide init [dir]         — scaffold a new agent project
- *   renowide add <kind> <name>  — scaffold a v0.6 block, tool, or A/B variant
- *   renowide preview            — render renowide.yaml locally (no API)
- *   renowide login              — device-code authentication
- *   renowide publish            — upload manifest + register agent
- *   renowide test:sandbox       — run a simulated hire against your endpoint
- *   renowide status             — summary of live agents, hires, credits
- *   renowide whoami             — print the logged-in creator's identity
- *   renowide logout             — remove stored credentials
+ *   renowide init [dir]            — scaffold a new agent project
+ *   renowide add <kind> <name>     — scaffold a v0.6 block, tool, or A/B variant
+ *   renowide preview               — render renowide.yaml locally (no API)
+ *   renowide login [--key <key>]   — device-code auth, or CI-friendly API key
+ *   renowide publish               — upload full renowide.yaml manifest (Persona B)
+ *   renowide deploy                — publish a link-out agent from renowide.json (Persona A)
+ *   renowide hire show <hire_id>   — inspect a single hire (debugging webhooks)
+ *   renowide test:sandbox          — run a simulated hire against your endpoint
+ *   renowide status                — summary of live agents, hires, credits
+ *   renowide whoami                — print the logged-in creator's identity
+ *   renowide logout                — remove stored credentials
+ *
+ * Two publish paths, two configs, two mental models:
+ *   • `publish` reads `renowide.yaml` (Persona B — Renowide hosts the whole
+ *     agent: Canvas Kit, tools, post-hire flow, brand, variants, i18n)
+ *   • `deploy`  reads `renowide.json` (Persona A — dev hosts their own UI;
+ *     Renowide is the marketplace + payment + webhook orchestrator only)
  */
 
 import { Command } from "commander";
 import pc from "picocolors";
 
 import { cmdAdd } from "./commands/add";
+import { cmdDeploy } from "./commands/deploy";
+import { cmdHireShow } from "./commands/hire";
 import { cmdInit } from "./commands/init";
 import { cmdLogin } from "./commands/login";
 import { cmdLogout } from "./commands/logout";
@@ -28,7 +38,7 @@ import { cmdStatus } from "./commands/status";
 import { cmdWhoami } from "./commands/whoami";
 import { loadConfig } from "./config";
 
-const VERSION = "0.4.0";
+const VERSION = "0.5.0";
 
 async function main() {
   const program = new Command();
@@ -46,8 +56,14 @@ async function main() {
 
   program
     .command("login")
-    .description("Authenticate with Renowide (device-code flow)")
+    .description("Authenticate with Renowide (device-code flow, or --key for CI)")
     .option("--api <url>", "Override API base URL", loadConfig().apiBase)
+    .option(
+      "--key <rw_key>",
+      "Skip the browser flow and validate a pre-minted API key " +
+        "(rw_key_... for live, rw_key_test_... for sandbox). " +
+        "Mint one at /creator?section=api-keys.",
+    )
     .action((opts: any) => cmdLogin(opts));
 
   program
@@ -95,6 +111,28 @@ async function main() {
     .description("Show live agents, hires, credits, and payout-ready totals")
     .option("--agent <slug>", "Filter to a single agent slug")
     .action((opts: any) => cmdStatus(opts));
+
+  program
+    .command("deploy")
+    .description(
+      "Publish a Persona A link-out agent from renowide.json (dev hosts their own UI)",
+    )
+    .option("--config <path>", "Path to renowide.json", "renowide.json")
+    .option("--dry-run", "Validate only — do not call the API")
+    .action((opts: any) => cmdDeploy(opts));
+
+  // `hire` is a parent command with subcommands so we can grow into
+  // `renowide hire list`, `renowide hire logs`, etc. without another
+  // top-level command later.
+  const hire = program
+    .command("hire")
+    .description("Inspect hires (read-only debugging tools)");
+
+  hire
+    .command("show <hire_id>")
+    .description("Print details, buyer form, and webhook delivery state for a hire")
+    .option("--json", "Output the raw JSON response instead of a summary")
+    .action((hireId: string, opts: any) => cmdHireShow(hireId, opts));
 
   program.parseAsync(process.argv).catch((err) => {
     console.error(pc.red(`error: ${err?.message ?? err}`));
