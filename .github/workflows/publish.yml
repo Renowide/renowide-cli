@@ -30,8 +30,11 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: 'lts/*'
           registry-url: 'https://registry.npmjs.org'
+
+      - name: Upgrade npm (Trusted Publishing needs >= 11.5.1 for OIDC)
+        run: npm install -g npm@latest
 
       - name: Install
         run: npm ci
