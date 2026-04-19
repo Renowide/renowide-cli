@@ -272,8 +272,9 @@ const RenowideJsonSchema = z
     sandbox_endpoint: z.string().url().optional(),
   })
   // Forward-compat: unknown keys are warned about, not rejected. This lets
-  // us add fields server-side without breaking old CLIs.
-  .passthrough();
+  // us add fields server-side without breaking old CLIs. In zod 4, the old
+  // `.passthrough()` is spelled `.loose()` (same semantics).
+  .loose();
 
 export type RenowideJson = z.infer<typeof RenowideJsonSchema>;
 
@@ -323,7 +324,9 @@ export async function cmdDeploy(opts: {
     );
   }
 
-  const validation = RenowideJsonSchema.safeParse(parsed);
+  // reportInput: true keeps the rejected value on each issue (zod 4 omits it
+  // by default to reduce payload size; we need it for good error messages).
+  const validation = RenowideJsonSchema.safeParse(parsed, { reportInput: true });
   if (!validation.success) {
     const issues = validation.error.issues
       .map((i) => `  • ${i.path.join(".") || "(root)"}: ${i.message}`)
@@ -332,9 +335,9 @@ export async function cmdDeploy(opts: {
   }
   const config = validation.data;
 
-  // Warn on unknown keys (from .passthrough) so we don't silently drop
-  // typo'd fields.
-  const knownKeys = new Set(Object.keys(RenowideJsonSchema._def.shape()));
+  // Warn on unknown keys (from .loose()) so we don't silently drop typo'd
+  // fields. zod 4 exposes the shape map as a direct property, not a function.
+  const knownKeys = new Set(Object.keys(RenowideJsonSchema.shape));
   const unknownKeys = Object.keys(parsed as Record<string, unknown>).filter(
     (k) => !knownKeys.has(k),
   );

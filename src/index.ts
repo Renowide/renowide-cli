@@ -38,7 +38,7 @@ import { cmdStatus } from "./commands/status";
 import { cmdWhoami } from "./commands/whoami";
 import { loadConfig } from "./config";
 
-const VERSION = "0.6.0";
+const VERSION = "0.7.0";
 
 async function main() {
   const program = new Command();

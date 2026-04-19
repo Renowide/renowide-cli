@@ -483,7 +483,7 @@ export function readManifest(manifestPath: string): Manifest {
   } catch (err: any) {
     throw new Error(`Invalid YAML in ${manifestPath}: ${err?.message ?? err}`);
   }
-  const result = ManifestSchema.safeParse(parsed);
+  const result = ManifestSchema.safeParse(parsed, { reportInput: true });
   if (!result.success) {
     const issues = result.error.issues
       .map((i) => `  • ${i.path.join(".") || "(root)"}: ${formatIssueMessage(i)}`)
@@ -496,11 +496,15 @@ export function readManifest(manifestPath: string): Manifest {
 
 // Enhance zod's default message when we can suggest a near-match. This is
 // a DX touch — typos like `finance` → `act` should surface the fix inline.
-function formatIssueMessage(issue: z.ZodIssue): string {
-  if (issue.code === "invalid_enum_value") {
+//
+// zod 4 renamed the enum-mismatch issue code from `invalid_enum_value` to
+// `invalid_value`, and the payload now carries `input`/`values` instead of
+// `received`/`options`.
+function formatIssueMessage(issue: z.core.$ZodIssue): string {
+  if (issue.code === "invalid_value") {
     const anyIssue = issue as any;
-    const received = String(anyIssue.received ?? "");
-    const options: string[] = anyIssue.options ?? [];
+    const received = String(anyIssue.input ?? "");
+    const options: string[] = anyIssue.values ?? [];
     const suggestion = nearestOption(received, options);
     const base = `Expected ${options.map((o) => `'${o}'`).join(" | ")}, received '${received}'`;
     return suggestion ? `${base}. Did you mean '${suggestion}'?` : base;
