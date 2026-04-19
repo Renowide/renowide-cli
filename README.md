@@ -242,8 +242,10 @@ npm run build
 node dist/index.js init /tmp/test-agent
 ```
 
-The source is TypeScript. PRs welcome — start with an issue if it's a
-non-trivial change.
+The source is TypeScript. PRs welcome — see
+[CONTRIBUTING.md](./CONTRIBUTING.md) for what we actively want help with,
+what we won't merge, and the 10 good-first-issue areas we've tagged.
+Small fixes can skip the issue step; anything larger, open an issue first.
 
 ---
 
@@ -254,6 +256,8 @@ non-trivial change.
 - Example agents: [github.com/Renowide/example-agents](https://github.com/Renowide/example-agents)
 - Changelog: [GitHub Releases](https://github.com/Renowide/renowide-cli/releases)
 - Report a bug: [GitHub Issues](https://github.com/Renowide/renowide-cli/issues)
+- Contribute: [CONTRIBUTING.md](./CONTRIBUTING.md)
+- Ask a question: [GitHub Discussions](https://github.com/Renowide/renowide-cli/discussions)
 
 ## License
 

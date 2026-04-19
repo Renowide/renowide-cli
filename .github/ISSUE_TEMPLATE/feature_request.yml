@@ -1,0 +1,54 @@
+name: Feature request
+description: Propose a new CLI command, flag, or behavior.
+labels: ["enhancement", "needs-discussion"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before opening: please read the "What we won't merge" section of
+        [CONTRIBUTING.md](https://github.com/Renowide/renowide-cli/blob/main/CONTRIBUTING.md#what-we-wont-merge).
+        Features in that list will be closed without discussion.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: |
+        Start with the pain, not the solution. A good feature request
+        explains what a user was trying to do, what got in the way, and
+        what a good outcome looks like.
+      placeholder: |
+        I'm trying to deploy from a GitHub Actions workflow. Today I have
+        to pipe `echo $RENOWIDE_API_KEY | renowide login --stdin` which
+        requires a prompt. I want a non-interactive way.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you want the CLI to do?
+      description: Concrete example of the command/flag/behavior you're proposing.
+      placeholder: |
+        Accept `RENOWIDE_API_KEY` env var directly without calling
+        `renowide login` at all. No prompt, no credentials file write.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What have you tried or considered?
+      description: Workarounds, other CLIs that do this well, etc.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: willing
+    attributes:
+      label: Would you be willing to help?
+      options:
+        - label: I'd open a PR if this is accepted
+        - label: I'd test a draft PR from a maintainer
+        - label: I'd write the docs for this
+        - label: I just want to file it, no capacity to help

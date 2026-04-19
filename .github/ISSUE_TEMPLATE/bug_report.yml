@@ -1,0 +1,86 @@
+name: Bug report
+description: Something in the CLI behaves differently from what CONTRIBUTING.md or the README says.
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before opening:
+        - Run `renowide --version` and include the output below.
+        - Check if you're on the latest version: `npm view @renowide/cli version`.
+        - Search [open and closed issues](https://github.com/Renowide/renowide-cli/issues?q=is%3Aissue) for your error.
+        - **Security issues**: do NOT file here. Email `security@renowide.com`.
+
+  - type: input
+    id: version
+    attributes:
+      label: CLI version
+      description: Output of `renowide --version`
+      placeholder: "0.6.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - macOS
+        - Linux (Ubuntu/Debian)
+        - Linux (other)
+        - Windows 10/11
+        - WSL
+        - Other (specify in description)
+    validations:
+      required: true
+
+  - type: input
+    id: node
+    attributes:
+      label: Node.js version
+      description: Output of `node --version`
+      placeholder: "v20.11.0"
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug. Paste the full error output.
+      placeholder: |
+        I ran `renowide deploy` and got:
+
+        ```
+        Error: ...
+        ```
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: The smallest set of steps someone else can follow to hit the same bug.
+      placeholder: |
+        1. `npx @renowide/cli init test-agent`
+        2. `cd test-agent`
+        3. `renowide deploy --dry-run`
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Anything else worth knowing?
+      description: Unusual network setup, proxy, corporate laptop with signed certs, etc.
+    validations:
+      required: false
