@@ -486,12 +486,71 @@ export function readManifest(manifestPath: string): Manifest {
   const result = ManifestSchema.safeParse(parsed);
   if (!result.success) {
     const issues = result.error.issues
-      .map((i) => `  • ${i.path.join(".") || "(root)"}: ${i.message}`)
+      .map((i) => `  • ${i.path.join(".") || "(root)"}: ${formatIssueMessage(i)}`)
       .join("\n");
     throw new Error(`Manifest validation failed:\n${issues}`);
   }
   validateWhenExpressions(result.data);
   return result.data;
+}
+
+// Enhance zod's default message when we can suggest a near-match. This is
+// a DX touch — typos like `finance` → `act` should surface the fix inline.
+function formatIssueMessage(issue: z.ZodIssue): string {
+  if (issue.code === "invalid_enum_value") {
+    const anyIssue = issue as any;
+    const received = String(anyIssue.received ?? "");
+    const options: string[] = anyIssue.options ?? [];
+    const suggestion = nearestOption(received, options);
+    const base = `Expected ${options.map((o) => `'${o}'`).join(" | ")}, received '${received}'`;
+    return suggestion ? `${base}. Did you mean '${suggestion}'?` : base;
+  }
+  return issue.message;
+}
+
+function nearestOption(input: string, options: string[]): string | null {
+  if (!input || !options.length) return null;
+  const lower = input.toLowerCase();
+
+  // Fast path — prefix or substring containment usually means the dev
+  // typed a qualified/plural/suffix variant of a valid option (e.g.
+  // "act_now" → "act", "finances" → "finance", "messages" → "message").
+  for (const opt of options) {
+    const o = opt.toLowerCase();
+    if (lower.startsWith(o) || o.startsWith(lower)) return opt;
+    if (lower.includes(o) || o.includes(lower)) return opt;
+  }
+
+  // Slow path — edit distance with a generous threshold based on the
+  // longer of the two strings so we still catch typos that aren't
+  // contained (e.g. "anaylse" → "analyse").
+  let best: { opt: string; score: number } | null = null;
+  for (const opt of options) {
+    const d = levenshtein(lower, opt.toLowerCase());
+    const threshold = Math.max(2, Math.floor(Math.max(input.length, opt.length) * 0.5));
+    if (d <= threshold && (best === null || d < best.score)) {
+      best = { opt, score: d };
+    }
+  }
+  return best?.opt ?? null;
+}
+
+function levenshtein(a: string, b: string): number {
+  if (a === b) return 0;
+  if (!a.length) return b.length;
+  if (!b.length) return a.length;
+  const prev = new Array(b.length + 1).fill(0);
+  const curr = new Array(b.length + 1).fill(0);
+  for (let j = 0; j <= b.length; j++) prev[j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    curr[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      curr[j] = Math.min(curr[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost);
+    }
+    for (let j = 0; j <= b.length; j++) prev[j] = curr[j];
+  }
+  return curr[b.length];
 }
 
 // ─── `when:` validator (bounded grammar, matches backend) ────────────────────

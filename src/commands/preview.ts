@@ -169,6 +169,13 @@ function renderHtml(manifest: Manifest, state: PreviewState): string {
       .chart { border: 1px dashed #CBD5E1; border-radius: 10px; padding: 16px; color:#475569; font-size: 13px; }
       .chart .bar { display: inline-block; margin-right: 4px; background: var(--rw-brand-primary); border-radius: 3px; opacity: .85; }
       .note { background:#FEF3C7; border:1px solid #FDE68A; color:#92400E; padding: 8px 12px; border-radius: 6px; font-size: 12px; }
+      .variant-block { border: 1px dashed #CBD5E1; border-radius: 10px; padding: 12px 14px; display:flex; flex-direction:column; gap: 12px; }
+      .variant-tag { font-size: 11px; color:#6B7280; text-transform: uppercase; letter-spacing: .6px; font-weight:600; }
+      .variant-tag code { background:#F3F4F6; padding: 1px 6px; border-radius: 4px; font-weight: 500; text-transform: none; }
+      .markdown strong { color: var(--rw-brand-text); }
+      .markdown a { color: var(--rw-brand-primary); text-decoration: underline; }
+      .markdown code { background:#F3F4F6; padding: 1px 6px; border-radius: 4px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 92%; }
+      .markdown ul, .markdown ol { margin: 4px 0; padding-left: 22px; }
     </style>
   </head>
   <body>
@@ -182,8 +189,8 @@ function renderHtml(manifest: Manifest, state: PreviewState): string {
       </div>
       <div class="note">⚠ This is a local preview — <code>when:</code> is not evaluated and tool calls return no data.</div>
 
-      ${show("post_hire") ? renderSurface("Post-hire", renderCanvas(pickCanvas(manifest.post_hire.welcome_canvas, manifest.post_hire.variants ?? []), i18nLookup)) : ""}
-      ${show("chat") ? renderSurface("Chat", renderCanvas(pickCanvas(manifest.chat.canvas, manifest.chat.variants ?? []), i18nLookup)) : ""}
+      ${show("post_hire") ? renderSurfaceWithVariants("Post-hire", manifest.post_hire.welcome_canvas, manifest.post_hire.variants ?? [], i18nLookup) : ""}
+      ${show("chat") ? renderSurfaceWithVariants("Chat", manifest.chat.canvas, manifest.chat.variants ?? [], i18nLookup) : ""}
       ${show("dashboard") ? renderDashboard(manifest, i18nLookup) : ""}
       ${manifest.tools?.length ? renderTools(manifest.tools, i18nLookup) : ""}
     </div>
@@ -194,6 +201,33 @@ function renderHtml(manifest: Manifest, state: PreviewState): string {
 function renderSurface(title: string, inner: string): string {
   if (!inner.trim()) return "";
   return `<div class="card"><h2>${escape(title)}</h2><div class="blocks">${inner}</div></div>`;
+}
+
+// Render a surface (Chat / Post-hire) with its flat canvas AND each of its
+// A/B variants as clearly-labelled sub-sections, so devs can eyeball what
+// their experiment arms will look like side-by-side without needing a live
+// hire_id to trigger hashing.
+function renderSurfaceWithVariants(
+  title: string,
+  flat: any[],
+  variants: Array<{ id: string; weight?: number; blocks?: any[] }>,
+  t: (s: unknown) => any,
+): string {
+  const parts: string[] = [];
+  if (flat.length) {
+    parts.push(
+      `<div class="variant-block"><div class="variant-tag">main canvas</div>${renderCanvas(flat, t)}</div>`,
+    );
+  }
+  for (const v of variants) {
+    if (!v.blocks?.length) continue;
+    const weight = v.weight ?? 1;
+    parts.push(
+      `<div class="variant-block"><div class="variant-tag">variant <code>${escape(v.id)}</code> · weight ${weight}</div>${renderCanvas(v.blocks, t)}</div>`,
+    );
+  }
+  if (!parts.length) return "";
+  return `<div class="card"><h2>${escape(title)}</h2><div class="blocks">${parts.join("")}</div></div>`;
 }
 
 function renderDashboard(m: Manifest, t: (s: unknown) => any): string {
@@ -221,13 +255,6 @@ function renderTools(tools: Manifest["tools"], t: (s: unknown) => any): string {
     )
     .join("");
   return `<div class="card"><h2>Tools</h2><div class="blocks">${items}</div></div>`;
-}
-
-function pickCanvas<T>(flat: T[], variants: Array<{ blocks?: T[] }>): T[] {
-  // In preview, always pick the flat list if present, else the first variant.
-  if (flat.length) return flat;
-  if (variants.length && variants[0].blocks?.length) return variants[0].blocks;
-  return [];
 }
 
 function renderCanvas(blocks: any[], t: (s: unknown) => any): string {
@@ -308,17 +335,72 @@ function renderChartPreview(b: any, t: (s: unknown) => any): string {
 }
 
 function renderMarkdown(src: string): string {
-  // Deliberately minimal: headings + paragraphs. Full markdown rendering is
-  // the frontend's job; preview only needs a readable approximation.
-  return src
-    .split(/\n{2,}/)
-    .map((para) => {
-      if (/^###\s/.test(para)) return `<h3>${escape(para.replace(/^###\s/, ""))}</h3>`;
-      if (/^##\s/.test(para)) return `<h2>${escape(para.replace(/^##\s/, ""))}</h2>`;
-      if (/^#\s/.test(para)) return `<h1>${escape(para.replace(/^#\s/, ""))}</h1>`;
-      return `<p>${escape(para).replace(/\n/g, "<br/>")}</p>`;
-    })
-    .join("");
+  // Safe subset: headings, bold, italic, inline code, links, lists, hr.
+  // Matches what the frontend CanvasRenderer accepts so preview ≈ prod.
+  const paras = src.split(/\n{2,}/);
+  const out: string[] = [];
+
+  for (const block of paras) {
+    const trimmed = block.replace(/\s+$/g, "");
+    if (!trimmed) continue;
+
+    // Horizontal rule.
+    if (/^(-{3,}|\*{3,}|_{3,})$/.test(trimmed)) {
+      out.push("<hr/>");
+      continue;
+    }
+
+    // Heading — level 1..3.
+    const headMatch = /^(#{1,3})\s+(.+)$/.exec(trimmed);
+    if (headMatch && !trimmed.includes("\n")) {
+      const level = headMatch[1].length;
+      out.push(`<h${level}>${renderInline(headMatch[2])}</h${level}>`);
+      continue;
+    }
+
+    // Unordered / ordered lists.
+    const lines = trimmed.split("\n");
+    if (lines.every((l) => /^[-*]\s+/.test(l))) {
+      const items = lines.map((l) => `<li>${renderInline(l.replace(/^[-*]\s+/, ""))}</li>`).join("");
+      out.push(`<ul>${items}</ul>`);
+      continue;
+    }
+    if (lines.every((l) => /^\d+\.\s+/.test(l))) {
+      const items = lines.map((l) => `<li>${renderInline(l.replace(/^\d+\.\s+/, ""))}</li>`).join("");
+      out.push(`<ol>${items}</ol>`);
+      continue;
+    }
+
+    // Default: paragraph with <br/> for single newlines.
+    const rendered = lines.map(renderInline).join("<br/>");
+    out.push(`<p>${rendered}</p>`);
+  }
+  return out.join("");
+}
+
+// Inline markdown: escape first, then swap markers for tags. Order matters
+// (links before emphasis before code) so we don't double-process tokens.
+function renderInline(raw: string): string {
+  let s = escape(raw);
+  // Inline code — single backtick. Use placeholders so bold/italic
+  // don't mangle characters inside the code.
+  const codes: string[] = [];
+  s = s.replace(/`([^`\n]+)`/g, (_m, code) => {
+    codes.push(code);
+    return `\u0000CODE${codes.length - 1}\u0000`;
+  });
+  // Links — [text](https://…).
+  s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (_m, text, url) =>
+    `<a href="${url}" target="_blank" rel="noreferrer">${text}</a>`,
+  );
+  // Bold — **text** / __text__.
+  s = s.replace(/(\*\*|__)([^*_\n]+?)\1/g, "<strong>$2</strong>");
+  // Italic — *text* / _text_ (single-char, no nesting into words).
+  s = s.replace(/(^|[\s(])\*([^*\n]+?)\*(?=$|[\s.,!?;:)])/g, "$1<em>$2</em>");
+  s = s.replace(/(^|[\s(])_([^_\n]+?)_(?=$|[\s.,!?;:)])/g, "$1<em>$2</em>");
+  // Restore inline code.
+  s = s.replace(/\u0000CODE(\d+)\u0000/g, (_m, i) => `<code>${codes[Number(i)]}</code>`);
+  return s;
 }
 
 function fontStackFor(font: string): string {

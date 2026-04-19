@@ -41,6 +41,7 @@ export async function cmdInit(opts: { dir?: string; lang?: string; inPlace?: boo
   console.log("");
   console.log("  next steps:");
   console.log(pc.cyan(`    cd ${dir}`));
+  console.log(pc.cyan(`    renowide preview         # see how your hire-page looks (no login)`));
   if (lang === "node") {
     console.log(pc.cyan(`    cd node && npm install`));
     console.log(pc.cyan(`    npm run dev              # run your MCP server`));
@@ -48,8 +49,14 @@ export async function cmdInit(opts: { dir?: string; lang?: string; inPlace?: boo
     console.log(pc.cyan(`    cd python && pip install -r requirements.txt`));
     console.log(pc.cyan(`    uvicorn agent.server:app --reload --port 8787`));
   }
+  console.log(pc.cyan(`    renowide publish --dry-run   # validate manifest, no API call`));
   console.log(pc.cyan(`    renowide login`));
   console.log(pc.cyan(`    renowide publish`));
+  console.log("");
+  console.log(pc.gray("  add v0.6 features any time:"));
+  console.log(pc.cyan(`    renowide add block chart      # chart · markdown · file_upload · date_picker · code_block`));
+  console.log(pc.cyan(`    renowide add tool send_email  # declarative tool schema`));
+  console.log(pc.cyan(`    renowide add variant compact  # A/B variant on chat canvas`));
 }
 
 async function askDir(): Promise<string> {
@@ -104,7 +111,13 @@ async function writeManifestInPlace() {
   if (!answers.name) throw new Error("cancelled");
 
   const yaml =
-`name: "${answers.name}"
+`# renowide.yaml — agent manifest (v0.6)
+#
+# Full spec:  https://renowide.com/docs/agents/manifest
+# Preview:    \`renowide preview\` (no login needed)
+# Validate:   \`renowide publish --dry-run\`
+
+name: "${answers.name}"
 slug: "${answers.slug}"
 tagline: "${answers.tagline ?? ""}"
 guild: "${answers.guild}"
@@ -130,9 +143,57 @@ governance:
   auto_run: ["main"]
 
 models_used: []
+
+# ── v0.6: brand the post-hire experience ─────────────────────────────
+# Approved fonts: inter, ibm_plex_sans, roboto, space_grotesk,
+#                 source_serif_pro, jetbrains_mono, system
+brand:
+  primary_color: "#2563EB"
+  accent_color:  "#F59E0B"
+  font_family:   "inter"
+  border_radius: "medium"
+
+# ── v0.6: declarative tool schema ────────────────────────────────────
+# Renowide auto-generates Approve/Reject UI + typed SDK stubs.
+tools: []
+  # - name: "send_email"
+  #   description: "Send a transactional email on behalf of the employer"
+  #   category: "communicate"        # read | write | communicate | analyse | act
+  #   requires_approval: true
+  #   inputs:
+  #     - name: "to"
+  #       type: "string"
+  #       required: true
+
+# ── v0.6: Canvas Kit post-hire welcome ───────────────────────────────
+# Block types: header, section, markdown, date_picker, file_upload,
+#              checkbox, text_input, cta, image, info_callout, chart,
+#              code_block, divider, kpi, table, oauth_button,
+#              api_key_input, quick_reply, link_button,
+#              integration_button.
+post_hire:
+  welcome_canvas:
+    - type: "header"
+      text: "i18n:post_hire.title"
+    - type: "markdown"
+      source: |
+        **Welcome!** Let's get you set up in under a minute.
+
+# ── v0.6: localisation ───────────────────────────────────────────────
+# Any string can reference \`i18n:<key>\` and be resolved per-user.
+i18n:
+  en:
+    post_hire.title: "Let's set you up"
+  # de:
+  #   post_hire.title: "Einrichtung starten"
 `;
   fs.writeFileSync(target, yaml);
   console.log(pc.green(`✓ wrote renowide.yaml`));
+  console.log("");
+  console.log(pc.gray("  next:"));
+  console.log(pc.cyan(`    renowide preview             # local HTML render`));
+  console.log(pc.cyan(`    renowide publish --dry-run   # validate schema`));
+  console.log(pc.cyan(`    renowide add block chart     # add a v0.6 block`));
 }
 
 async function downloadAndExtract(url: string, target: string) {

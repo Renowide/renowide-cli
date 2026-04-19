@@ -3,18 +3,21 @@
  * @renowide/cli — command-line tool for publishing agents to Renowide.
  *
  * Commands:
- *   renowide init [dir]        — scaffold a new agent project
- *   renowide login             — device-code authentication
- *   renowide publish           — upload manifest + register agent
- *   renowide test:sandbox      — run a simulated hire against your endpoint
- *   renowide status            — summary of live agents, hires, credits
- *   renowide whoami            — print the logged-in creator's identity
- *   renowide logout            — remove stored credentials
+ *   renowide init [dir]         — scaffold a new agent project
+ *   renowide add <kind> <name>  — scaffold a v0.6 block, tool, or A/B variant
+ *   renowide preview            — render renowide.yaml locally (no API)
+ *   renowide login              — device-code authentication
+ *   renowide publish            — upload manifest + register agent
+ *   renowide test:sandbox       — run a simulated hire against your endpoint
+ *   renowide status             — summary of live agents, hires, credits
+ *   renowide whoami             — print the logged-in creator's identity
+ *   renowide logout             — remove stored credentials
  */
 
 import { Command } from "commander";
 import pc from "picocolors";
 
+import { cmdAdd } from "./commands/add";
 import { cmdInit } from "./commands/init";
 import { cmdLogin } from "./commands/login";
 import { cmdLogout } from "./commands/logout";
@@ -25,7 +28,7 @@ import { cmdStatus } from "./commands/status";
 import { cmdWhoami } from "./commands/whoami";
 import { loadConfig } from "./config";
 
-const VERSION = "0.3.0";
+const VERSION = "0.4.0";
 
 async function main() {
   const program = new Command();
@@ -63,6 +66,13 @@ async function main() {
     .option("--manifest <path>", "Path to renowide.yaml", "renowide.yaml")
     .option("--dry-run", "Validate only — do not call the API")
     .action((opts: any) => cmdPublish(opts));
+
+  program
+    .command("add <kind> <name>")
+    .description("Scaffold a Canvas Kit block, tool, or A/B variant into renowide.yaml")
+    .option("--manifest <path>", "Path to renowide.yaml", "renowide.yaml")
+    .option("--surface <surface>", "Target surface: chat | post_hire", "chat")
+    .action((kind: string, name: string, opts: any) => cmdAdd(kind, name, opts));
 
   program
     .command("preview")
