@@ -18,13 +18,14 @@ import pc from "picocolors";
 import { cmdInit } from "./commands/init";
 import { cmdLogin } from "./commands/login";
 import { cmdLogout } from "./commands/logout";
+import { cmdPreview } from "./commands/preview";
 import { cmdPublish } from "./commands/publish";
 import { cmdSandbox } from "./commands/sandbox";
 import { cmdStatus } from "./commands/status";
 import { cmdWhoami } from "./commands/whoami";
 import { loadConfig } from "./config";
 
-const VERSION = "0.1.0";
+const VERSION = "0.3.0";
 
 async function main() {
   const program = new Command();
@@ -62,6 +63,14 @@ async function main() {
     .option("--manifest <path>", "Path to renowide.yaml", "renowide.yaml")
     .option("--dry-run", "Validate only — do not call the API")
     .action((opts: any) => cmdPublish(opts));
+
+  program
+    .command("preview")
+    .description("Render renowide.yaml locally in the browser (no API calls)")
+    .option("--manifest <path>", "Path to renowide.yaml", "renowide.yaml")
+    .option("--port <port>", "Port to listen on", "4400")
+    .option("--host <host>", "Host to bind to", "127.0.0.1")
+    .action((opts: any) => cmdPreview(opts));
 
   program
     .command("test:sandbox")

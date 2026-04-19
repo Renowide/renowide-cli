@@ -47,12 +47,27 @@ function summariseAssets(m: Manifest): string[] {
 function summariseCanvas(m: Manifest): string[] {
   const lines: string[] = [];
   if (m.chat.canvas.length) lines.push(`  chat canvas:       ${m.chat.canvas.length} block(s)`);
+  if (m.chat.variants?.length)
+    lines.push(`  chat variants:     ${m.chat.variants.length}`);
   if (m.chat.starter_prompts.length)
     lines.push(`  chat starter:      ${m.chat.starter_prompts.length} prompt(s)`);
   if (m.post_hire.welcome_canvas.length)
     lines.push(`  post-hire canvas:  ${m.post_hire.welcome_canvas.length} block(s)`);
+  if (m.post_hire.variants?.length)
+    lines.push(`  post-hire variants:${m.post_hire.variants.length}`);
   if (m.dashboard.tiles.length)
     lines.push(`  dashboard tiles:   ${m.dashboard.tiles.length}`);
+  if (m.brand) {
+    const brandSummary = [
+      m.brand.primary_color ? `primary ${m.brand.primary_color}` : null,
+      m.brand.accent_color ? `accent ${m.brand.accent_color}` : null,
+      m.brand.font_family ? `font ${m.brand.font_family}` : null,
+    ]
+      .filter(Boolean)
+      .join(", ");
+    if (brandSummary) lines.push(`  brand:             ${brandSummary}`);
+  }
+  if (m.tools?.length) lines.push(`  tools:             ${m.tools.length} declared`);
   return lines;
 }
 

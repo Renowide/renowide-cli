@@ -1,12 +1,16 @@
 /**
- * renowide.yaml parser + validator — v0.5.
+ * renowide.yaml parser + validator — v0.6.
  *
  * The shape here MUST stay in lockstep with the backend's pydantic
  * models in ``app/schemas/agent_manifest.py``. Add new fields on both
  * sides in the same commit.
  *
  * v0.1 manifests validate unchanged because every new field is
- * optional.
+ * optional. v0.6 additions:
+ *   • brand (primary/accent/text/surface colour, font_family, border_radius)
+ *   • tools[] (declarative tool schema → auto UI + generated SDK stubs)
+ *   • 5 new Canvas blocks: file_upload, date_picker, markdown, code_block, chart
+ *   • chat.variants[] / post_hire.variants[] for A/B testing
  */
 
 import fs from "node:fs";
@@ -248,6 +252,67 @@ export const BlockTableSchema = z.object({
   rows: z.array(z.array(z.union([z.string(), z.number(), z.boolean(), z.null()]))).max(10),
 });
 
+// ── v0.6 blocks ────────────────────────────────────────────────────────────
+
+export const BlockFileUploadSchema = z.object({
+  ...blockBase,
+  type: z.literal("file_upload"),
+  id: z.string(),
+  label: z.string().max(120),
+  required: z.boolean().optional().default(false),
+  accept: z.array(z.string()).max(10).optional().default([]),
+  max_mb: z.number().int().min(1).max(100).optional().default(20),
+  help: z.string().max(240).optional(),
+});
+
+const isoDateLike = z.string().max(30);
+
+export const BlockDatePickerSchema = z.object({
+  ...blockBase,
+  type: z.literal("date_picker"),
+  id: z.string(),
+  label: z.string().max(120),
+  mode: z.enum(["date", "datetime"]).default("date"),
+  required: z.boolean().optional().default(false),
+  min: isoDateLike.optional(),
+  max: isoDateLike.optional(),
+  default: isoDateLike.optional(),
+});
+
+export const BlockMarkdownSchema = z.object({
+  ...blockBase,
+  type: z.literal("markdown"),
+  source: z.string().max(8000),
+});
+
+const CODE_LANGS = [
+  "plaintext", "bash", "sh", "json", "yaml", "python", "typescript",
+  "javascript", "tsx", "jsx", "go", "rust", "sql", "html", "css", "md",
+] as const;
+
+export const BlockCodeBlockSchema = z.object({
+  ...blockBase,
+  type: z.literal("code_block"),
+  language: z.enum(CODE_LANGS).default("plaintext"),
+  source: z.string().max(4000),
+  filename: z.string().max(120).optional(),
+});
+
+export const ChartSeriesSchema = z.object({
+  label: z.string().max(60),
+  data: z.array(z.number()).min(1).max(100),
+});
+
+export const BlockChartSchema = z.object({
+  ...blockBase,
+  type: z.literal("chart"),
+  chart_type: z.enum(["bar", "line", "pie", "area"]).default("bar"),
+  title: z.string().max(120).optional(),
+  labels: z.array(z.string()).min(1).max(50),
+  series: z.array(ChartSeriesSchema).min(1).max(4),
+  stacked: z.boolean().optional().default(false),
+});
+
 export const CanvasBlockSchema = z.discriminatedUnion("type", [
   BlockHeaderSchema,
   BlockSectionSchema,
@@ -264,7 +329,64 @@ export const CanvasBlockSchema = z.discriminatedUnion("type", [
   BlockQuickReplySchema,
   BlockKPISchema,
   BlockTableSchema,
+  BlockFileUploadSchema,
+  BlockDatePickerSchema,
+  BlockMarkdownSchema,
+  BlockCodeBlockSchema,
+  BlockChartSchema,
 ]);
+
+// ── v0.6 Canvas variants (A/B) ─────────────────────────────────────────────
+
+export const CanvasVariantSchema = z.object({
+  id: z.string().regex(/^[a-z0-9_-]{1,40}$/),
+  weight: z.number().int().min(1).max(100).optional().default(1),
+  blocks: z.array(CanvasBlockSchema).optional().default([]),
+});
+
+// ── v0.6 Brand ─────────────────────────────────────────────────────────────
+
+const APPROVED_FONTS = [
+  "inter",
+  "ibm_plex_sans",
+  "roboto",
+  "space_grotesk",
+  "source_serif_pro",
+  "jetbrains_mono",
+  "system",
+] as const;
+
+const hexColour = z.string().regex(/^#[0-9A-Fa-f]{6}$/, "colour must be #RRGGBB");
+
+export const BrandSchema = z.object({
+  primary_color: hexColour.optional(),
+  accent_color: hexColour.optional(),
+  text_color: hexColour.optional(),
+  surface_color: hexColour.optional(),
+  font_family: z.enum(APPROVED_FONTS).optional(),
+  border_radius: z.enum(["none", "small", "medium", "large"]).optional(),
+});
+
+// ── v0.6 Tool schema ───────────────────────────────────────────────────────
+
+export const ToolInputFieldSchema = z.object({
+  name: z.string().regex(/^[a-zA-Z_][a-zA-Z0-9_]{0,63}$/),
+  type: z.enum(["string", "number", "integer", "boolean", "date", "file", "enum"]).default("string"),
+  description: z.string().max(240).optional(),
+  required: z.boolean().optional().default(false),
+  enum: z.array(z.string()).max(20).optional().default([]),
+  default: z.union([z.string(), z.number(), z.boolean()]).optional(),
+});
+
+export const ToolSchema = z.object({
+  name: z.string().regex(/^[a-z][a-z0-9_]{0,63}$/),
+  display_name: z.string().max(120).optional(),
+  description: z.string().max(500),
+  category: z.enum(["read", "write", "communicate", "analyse", "act"]).default("read"),
+  inputs: z.array(ToolInputFieldSchema).max(12).optional().default([]),
+  requires_approval: z.boolean().optional().default(true),
+  icon: z.string().optional(),
+});
 
 // ─── Chat / post_hire / dashboard ────────────────────────────────────────────
 
@@ -274,11 +396,13 @@ export const ChatSchema = z.object({
   greeting: z.string().max(400).optional(),
   starter_prompts: z.array(z.string()).max(4).optional().default([]),
   canvas: z.array(CanvasBlockSchema).optional().default([]),
+  variants: z.array(CanvasVariantSchema).max(4).optional().default([]),
 });
 
 export const PostHireSchema = z.object({
   welcome_message: z.string().max(500).optional(),
   welcome_canvas: z.array(CanvasBlockSchema).optional().default([]),
+  variants: z.array(CanvasVariantSchema).max(4).optional().default([]),
 });
 
 export const TileSourceSchema = z.object({
@@ -330,9 +454,12 @@ export const ManifestSchema = z.object({
   }),
   integrations: IntegrationsSchema.optional().default({ platform: [], employer: [] }),
   schedule: ScheduleSchema.optional().default({ events: [] }),
-  chat: ChatSchema.optional().default({ starter_prompts: [], canvas: [] }),
-  post_hire: PostHireSchema.optional().default({ welcome_canvas: [] }),
+  chat: ChatSchema.optional().default({ starter_prompts: [], canvas: [], variants: [] }),
+  post_hire: PostHireSchema.optional().default({ welcome_canvas: [], variants: [] }),
   dashboard: DashboardSchema.optional().default({ tiles: [] }),
+  // v0.6 additions
+  brand: BrandSchema.optional(),
+  tools: z.array(ToolSchema).max(24).optional().default([]),
   i18n: z.record(z.string(), z.record(z.string(), z.string())).optional().default({}),
   is_public: z.boolean().optional().default(true),
 });
@@ -396,7 +523,9 @@ export function validateWhen(expr: string): void {
 function walkCanvases(m: Manifest): CanvasBlock[] {
   const all: CanvasBlock[] = [];
   all.push(...m.chat.canvas);
+  for (const v of m.chat.variants ?? []) all.push(...(v.blocks ?? []));
   all.push(...m.post_hire.welcome_canvas);
+  for (const v of m.post_hire.variants ?? []) all.push(...(v.blocks ?? []));
   for (const t of m.dashboard.tiles) all.push(...t.render);
   return all;
 }
