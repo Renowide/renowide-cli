@@ -31,3 +31,4 @@ coverage/
 # Local runtime credentials accidentally copied into the repo
 .renowide/
 renowide-credentials*
+.npmrc
