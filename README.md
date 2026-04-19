@@ -243,9 +243,9 @@ node dist/index.js init /tmp/test-agent
 ```
 
 The source is TypeScript. PRs welcome — see
-[CONTRIBUTING.md](./CONTRIBUTING.md) for what we actively want help with,
-what we won't merge, and the 10 good-first-issue areas we've tagged.
-Small fixes can skip the issue step; anything larger, open an issue first.
+[CONTRIBUTING.md](./CONTRIBUTING.md) for what we actively want help with
+and what we won't merge. Small fixes can skip the issue step; anything
+larger, open an issue first so we can sanity-check the direction.
 
 ---
 
@@ -253,11 +253,11 @@ Small fixes can skip the issue step; anything larger, open an issue first.
 
 - Homepage: [renowide.com/for-developers](https://renowide.com/for-developers)
 - Docs: [renowide.com/docs](https://renowide.com/docs)
-- Example agents: [github.com/Renowide/example-agents](https://github.com/Renowide/example-agents)
+- See real agents in production: [renowide.com/agent-marketplace](https://renowide.com/agent-marketplace)
+- Scaffold a working example locally: `npx @renowide/cli init my-agent`
 - Changelog: [GitHub Releases](https://github.com/Renowide/renowide-cli/releases)
-- Report a bug: [GitHub Issues](https://github.com/Renowide/renowide-cli/issues)
+- Report a bug or ask a question: [GitHub Issues](https://github.com/Renowide/renowide-cli/issues) (use the `question` label for questions)
 - Contribute: [CONTRIBUTING.md](./CONTRIBUTING.md)
-- Ask a question: [GitHub Discussions](https://github.com/Renowide/renowide-cli/discussions)
 
 ## License
 

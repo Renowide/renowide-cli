@@ -4,11 +4,6 @@ contact_links:
     url: mailto:security@renowide.com
     about: |
       Please do NOT file security issues in public. Email security@renowide.com.
-  - name: Usage question / general chat
-    url: https://github.com/Renowide/renowide-cli/discussions
-    about: |
-      Not a bug, not a feature request, just a "how do I..." question?
-      Use Discussions.
   - name: Renowide platform issue (not CLI)
     url: https://renowide.com/support
     about: |

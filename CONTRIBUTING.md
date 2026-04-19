@@ -14,8 +14,8 @@ PRs that sit for months. We'd rather point you at something concrete.
 - Small fix? (< 50 LOC, obvious bug, typo) → **open a PR directly**, no ceremony.
 - New feature, new dependency, or refactor? → **open an issue first**, let's align before you spend the weekend on it.
 - Security issue? → `security@renowide.com`, not a GitHub issue. See [`SECURITY.md`](./SECURITY.md).
-- Question? → [GitHub Discussions](https://github.com/Renowide/renowide-cli/discussions).
-- Looking for something to work on? → [Good first issues](https://github.com/Renowide/renowide-cli/labels/good%20first%20issue).
+- Question? → open a [GitHub Issue](https://github.com/Renowide/renowide-cli/issues/new) and add the `question` label.
+- Looking for something to work on? → [open issues](https://github.com/Renowide/renowide-cli/issues) (anything with the `good first issue` label once we've triaged a few).
 
 ---
 
@@ -240,10 +240,8 @@ git commit -s -m "fix(foo): bar"
 
 | Channel | When to use |
 |---|---|
-| [GitHub Issues](https://github.com/Renowide/renowide-cli/issues) | Bugs, feature proposals, tracking |
-| [GitHub Discussions](https://github.com/Renowide/renowide-cli/discussions) | Questions, "is this a bug or am I holding it wrong", general chat |
+| [GitHub Issues](https://github.com/Renowide/renowide-cli/issues) | Bugs, feature proposals, tracking. Use the `question` label for "is this a bug or am I holding it wrong" |
 | `security@renowide.com` | Vulnerabilities only |
-| [Renowide Discord](https://renowide.com/discord) | Real-time help, contributor hangout |
 
 Mentioning `@Renowide` on a PR pings the whole org account, so we see it. Please don't email the founder directly for CLI stuff — it gets lost.
 
