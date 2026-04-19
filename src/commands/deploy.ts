@@ -49,7 +49,175 @@ import pc from "picocolors";
 import { z } from "zod";
 
 import { RenowideAPI } from "../api";
-import { requireCredentials } from "../config";
+import { requireCredentials, loadCredentials } from "../config";
+
+// Public page at which the agent will (or does) live once published.
+function forecastPublicUrl(apiBase: string, slug: string): string {
+  const host = apiBase.replace(/\/api\/v1\/?$/, "").replace(/\/$/, "");
+  return `${host}/agents/${slug}`;
+}
+
+// Best-effort endpoint probe — HEAD first, GET fallback. Never throws.
+async function probeUrl(url: string, timeoutMs = 4000): Promise<{
+  ok: boolean;
+  status: number | null;
+  note: string;
+}> {
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { method: "HEAD", signal: ctl.signal }).catch(
+      async (err) => {
+        if (err?.name === "AbortError") throw err;
+        // Some servers block HEAD — retry with GET.
+        return fetch(url, { method: "GET", signal: ctl.signal });
+      },
+    );
+    clearTimeout(timer);
+    // 2xx/3xx = healthy. 4xx = reachable but misconfigured (still counts as "DNS + TLS
+    // resolved"). 5xx or network errors = red flag.
+    const healthy = res.status >= 200 && res.status < 400;
+    const reachable = res.status >= 200 && res.status < 500;
+    const label = healthy
+      ? `${res.status} OK`
+      : reachable
+        ? `${res.status} reachable`
+        : `${res.status} ${res.statusText || "error"}`;
+    return { ok: reachable, status: res.status, note: label };
+  } catch (err: any) {
+    clearTimeout(timer);
+    if (err?.name === "AbortError") {
+      return { ok: false, status: null, note: `timed out after ${timeoutMs}ms` };
+    }
+    return {
+      ok: false,
+      status: null,
+      note: err?.message?.split("\n")[0] || "unreachable",
+    };
+  }
+}
+
+async function runDryRunPreview(
+  config: z.infer<typeof RenowideJsonSchema>,
+): Promise<void> {
+  const creds = loadCredentials(); // may be null — dry-run does not require auth
+  const apiBase = creds?.apiBase || "https://renowide.com";
+  const forecastSlug =
+    config.slug || config.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  const publicUrl = forecastPublicUrl(apiBase, forecastSlug);
+
+  console.log("");
+  console.log(pc.gray("── dry run — no API call, no writes ──"));
+  console.log("");
+
+  // ── 1. Reachability probes ──────────────────────────────────────────────
+  console.log(pc.bold("Pre-flight checks"));
+  const endpointProbe = await probeUrl(config.endpoint);
+  const endpointHealthy =
+    endpointProbe.status !== null &&
+    endpointProbe.status >= 200 &&
+    endpointProbe.status < 400;
+  const endpointMark = endpointHealthy
+    ? pc.green("✓")
+    : endpointProbe.ok
+      ? pc.yellow("!")
+      : pc.red("✗");
+  console.log(
+    `  ${endpointMark} endpoint       ${config.endpoint}  ${pc.gray(`(${endpointProbe.note})`)}`,
+  );
+  if (!endpointHealthy && endpointProbe.ok) {
+    console.log(
+      pc.gray(
+        `      endpoint responded but not 2xx/3xx — buyers clicking "Hire" will land on this URL.`,
+      ),
+    );
+  }
+  if (config.webhook_url) {
+    const webhookProbe = await probeUrl(config.webhook_url);
+    console.log(
+      `  ${webhookProbe.ok ? pc.green("✓") : pc.yellow("?")} webhook_url    ${config.webhook_url}  ${pc.gray(`(${webhookProbe.note})`)}`,
+    );
+    if (!webhookProbe.ok) {
+      console.log(
+        pc.gray(
+          `      webhook probes often 405/401 by design — that's fine; a real hire will POST here.`,
+        ),
+      );
+    }
+  } else {
+    console.log(
+      `  ${pc.gray("–")} webhook_url    ${pc.gray("not set — Renowide will default to <endpoint>/api/renowide/hire")}`,
+    );
+  }
+  if (config.icon_url) {
+    const iconProbe = await probeUrl(config.icon_url);
+    console.log(
+      `  ${iconProbe.ok ? pc.green("✓") : pc.yellow("!")} icon_url       ${config.icon_url}  ${pc.gray(`(${iconProbe.note})`)}`,
+    );
+  }
+  console.log("");
+
+  // ── 2. Marketplace listing preview ──────────────────────────────────────
+  console.log(pc.bold("Listing preview (buyer's view)"));
+  const box = (line: string) => `  │ ${line.padEnd(70)} │`;
+  const rule = "  ┌" + "─".repeat(72) + "┐";
+  const base = "  └" + "─".repeat(72) + "┘";
+  console.log(rule);
+  console.log(box(pc.bold(config.name)));
+  if (config.description) {
+    const desc = config.description.length > 68
+      ? config.description.slice(0, 65) + "..."
+      : config.description;
+    console.log(box(pc.gray(desc)));
+  }
+  console.log(box(""));
+  console.log(box(`Price:   ${config.price_credits} credits per hire`));
+  console.log(
+    box(
+      `Guild:   ${(config.categories?.[0] || "unclassified").padEnd(20)}  Path: A (link-out)`,
+    ),
+  );
+  if (config.completion_timeout_minutes) {
+    const mins = config.completion_timeout_minutes;
+    const readable =
+      mins < 60
+        ? `${mins} min`
+        : mins < 1440
+          ? `${Math.round(mins / 60)} h`
+          : `${Math.round(mins / 1440)} days`;
+    console.log(box(`Timeout: ${readable}`));
+  }
+  console.log(box(""));
+  console.log(box(pc.gray("[ Hire this agent → ]   would redirect buyer to:")));
+  console.log(box(pc.gray(`  ${config.endpoint}`)));
+  console.log(base);
+  console.log("");
+
+  // ── 3. What publishing would do ─────────────────────────────────────────
+  console.log(pc.bold("What `renowide deploy` would do"));
+  console.log(`  • POST ${apiBase}/api/v1/agents/publish`);
+  console.log(`  • Create or update an AgentProfile with slug  ${pc.bold(forecastSlug)}`);
+  console.log(`  • Return a handoff_secret (shown once only)`);
+  console.log(`  • List the agent publicly at  ${pc.underline(publicUrl)}`);
+  console.log("");
+
+  // ── 4. Blocking issues ──────────────────────────────────────────────────
+  const blockers: string[] = [];
+  if (!endpointProbe.ok) {
+    blockers.push(
+      `endpoint ${config.endpoint} is unreachable — buyers clicking "Hire" would hit a broken link`,
+    );
+  }
+  if (blockers.length > 0) {
+    console.log(pc.red("Blocking issues — fix before `renowide deploy`:"));
+    for (const b of blockers) console.log(pc.red(`  • ${b}`));
+    console.log("");
+    process.exitCode = 1;
+  } else {
+    console.log(pc.green("✓ Dry-run passed. Run `renowide deploy` (without --dry-run) to publish."));
+    console.log("");
+  }
+}
 
 // ─── renowide.json schema ────────────────────────────────────────────────────
 // Keep the required surface as narrow as physically possible. Every extra
@@ -178,11 +346,10 @@ export async function cmdDeploy(opts: {
     );
   }
 
-  // ── dry-run: show resolved config, stop before network ───────────────────
+  // ── dry-run: validate, probe URLs, render a listing preview ──────────────
+  // No publish API call; no writes; safe to run anytime.
   if (opts.dryRun) {
-    console.log(pc.gray("── dry run — no API call ──"));
-    console.log(pc.bold("Resolved config:"));
-    console.log(JSON.stringify(config, null, 2));
+    await runDryRunPreview(config);
     return;
   }
 
