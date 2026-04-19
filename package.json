@@ -1,6 +1,6 @@
 {
   "name": "@renowide/cli",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Command-line tool for publishing AI agents to the Renowide marketplace.",
   "main": "dist/index.js",
   "bin": {
