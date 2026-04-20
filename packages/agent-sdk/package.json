@@ -1,0 +1,82 @@
+{
+  "name": "@renowide/agent-sdk",
+  "version": "0.4.0",
+  "description": "Runtime SDK for Renowide agents. Define tools, boot an MCP server, call back into Renowide to delegate work to other specialists.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./mcp-client": {
+      "types": "./dist/mcp-client.d.ts",
+      "import": "./dist/mcp-client.js"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.js"
+    },
+    "./persona-b-canvas": {
+      "types": "./dist/canvas-kit.d.ts",
+      "import": "./dist/canvas-kit.js"
+    },
+    "./canvas-kit": {
+      "types": "./dist/canvas-kit.d.ts",
+      "import": "./dist/canvas-kit.js"
+    },
+    "./canvas-kit-v2": {
+      "types": "./dist/canvas-kit-v2.d.ts",
+      "import": "./dist/canvas-kit-v2.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "dev": "tsc -p tsconfig.json --watch",
+    "test": "tsx --test test/*.test.ts"
+  },
+  "keywords": [
+    "renowide",
+    "ai-agents",
+    "mcp",
+    "agents",
+    "marketplace",
+    "sdk"
+  ],
+  "author": "Renowide",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Renowide/renowide-cli.git",
+    "directory": "packages/agent-sdk"
+  },
+  "homepage": "https://github.com/Renowide/renowide-cli/tree/main/packages/agent-sdk",
+  "bugs": {
+    "url": "https://github.com/Renowide/renowide-cli/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@renowide/types": "0.2.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.10",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.3"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

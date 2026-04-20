@@ -2,13 +2,13 @@
   "name": "renowide-cli-monorepo",
   "private": true,
   "version": "0.0.0",
-  "description": "Monorepo for @renowide/cli, @renowide/types, @renowide/ui-kit.",
+  "description": "Monorepo for Renowide developer tooling: @renowide/cli, @renowide/types, @renowide/ui-kit, @renowide/agent-sdk, the renowide-canvas + renowide-agent-sdk Python packages, and starter examples.",
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build --workspace=packages/types && npm run build --workspace=packages/ui-kit && npm run build --workspace=packages/cli",
-    "typecheck": "npm run typecheck --workspace=packages/types && npm run typecheck --workspace=packages/ui-kit && npm run typecheck --workspace=packages/cli",
+    "build": "npm run build --workspace=packages/types && npm run build --workspace=packages/ui-kit && npm run build --workspace=packages/agent-sdk && npm run build --workspace=packages/cli",
+    "typecheck": "npm run typecheck --workspace=packages/types && npm run typecheck --workspace=packages/ui-kit && npm run typecheck --workspace=packages/agent-sdk && npm run typecheck --workspace=packages/cli",
     "test": "npm run test --workspaces --if-present",
     "clean": "rm -rf packages/*/dist packages/*/node_modules node_modules"
   },

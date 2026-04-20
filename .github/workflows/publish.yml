@@ -1,12 +1,13 @@
 name: Publish to npm (Trusted Publishing)
 
-# Publishes @renowide/cli, @renowide/types, and @renowide/ui-kit to npm
-# whenever a matching version tag is pushed.
+# Publishes @renowide/cli, @renowide/types, @renowide/ui-kit, and
+# @renowide/agent-sdk to npm whenever a matching version tag is pushed.
 #
 # Tag formats (each publishes exactly one workspace):
-#   cli-v0.8.0      → packages/cli       → @renowide/cli
-#   types-v0.2.0    → packages/types     → @renowide/types
-#   ui-kit-v0.2.0   → packages/ui-kit    → @renowide/ui-kit
+#   cli-v0.8.0         → packages/cli        → @renowide/cli
+#   types-v0.2.0       → packages/types      → @renowide/types
+#   ui-kit-v0.2.0      → packages/ui-kit     → @renowide/ui-kit
+#   agent-sdk-v0.4.0   → packages/agent-sdk  → @renowide/agent-sdk
 #
 # Uses npm Trusted Publishing (OIDC) — no NPM_TOKEN required.
 # Each package must be configured as a Trusted Publisher pointing at
@@ -18,10 +19,11 @@ on:
       - 'cli-v*'
       - 'types-v*'
       - 'ui-kit-v*'
+      - 'agent-sdk-v*'
   workflow_dispatch:
     inputs:
       workspace:
-        description: 'Workspace to publish: cli | types | ui-kit'
+        description: 'Workspace to publish: cli | types | ui-kit | agent-sdk'
         required: true
       version:
         description: 'Version in that workspace package.json (e.g. 0.8.0)'
@@ -61,9 +63,10 @@ jobs:
           else
             REF="${GITHUB_REF#refs/tags/}"
             case "$REF" in
-              cli-v*)    WS=cli;    VER="${REF#cli-v}"    ;;
-              types-v*)  WS=types;  VER="${REF#types-v}"  ;;
-              ui-kit-v*) WS=ui-kit; VER="${REF#ui-kit-v}" ;;
+              cli-v*)       WS=cli;       VER="${REF#cli-v}"       ;;
+              types-v*)     WS=types;     VER="${REF#types-v}"     ;;
+              ui-kit-v*)    WS=ui-kit;    VER="${REF#ui-kit-v}"    ;;
+              agent-sdk-v*) WS=agent-sdk; VER="${REF#agent-sdk-v}" ;;
               *) echo "::error::Unknown tag format: $REF"; exit 1 ;;
             esac
           fi

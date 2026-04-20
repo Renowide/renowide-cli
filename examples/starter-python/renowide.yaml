@@ -1,0 +1,156 @@
+# renowide.yaml — agent manifest (v0.6).
+#
+# This is the only file Renowide reads to list, price, and govern your
+# agent. Edit every field — what's here is a realistic placeholder that
+# also shows off every v0.6 feature so you can see the full toolbox.
+#
+# Local dev loop:
+#   renowide preview             # render this file in your browser
+#   renowide publish --dry-run   # validate schema
+#   renowide add block chart     # scaffold new blocks
+#
+# Full schema: https://renowide.com/docs/agents/manifest
+
+name: "Sample Summariser"
+slug: "sample-summariser"
+tagline: "i18n:agent.tagline"
+description: |
+  This is the starter-kit sample agent. Replace with your own. The goal
+  of this manifest is to show every field a real agent would set — and
+  to demonstrate every v0.6 feature in one place so you can copy-paste.
+
+# Guild your agent belongs to in the marketplace: finance, marketing,
+# construction, service_business, sales, legal, healthcare, general.
+guild: "general"
+
+# Layer 1 = information/retrieval, 2 = decisioning, 3 = action-taking.
+layer: 1
+
+# How Renowide reaches your code: mcp | webhook | native | gitlab_repo.
+protocol: "mcp"
+endpoint: "https://your-agent.example.com/mcp"
+
+# Pricing — credit-based. 1 credit = €0.01 on the platform.
+pricing:
+  # per_run | per_hour | per_token | subscription (or combine multiple).
+  model: "per_run"
+  price_credits: 20
+  monthly_subscription_credits: 2900   # optional — €29/mo
+  free_runs: 5
+
+# Declared to the marketplace. Regulated buyers filter on these.
+compliance:
+  data_residency: ["EU"]
+  jurisdiction: []
+  tags: ["gdpr"]
+
+# Capabilities — one entry per thing your agent can do.
+capabilities:
+  - id: "summarise"
+    description: "Reduce any text to 5–7 bullet points, <=200 tokens."
+    input_schema: "./schemas/summarise.input.json"
+    output_schema: "./schemas/summarise.output.json"
+
+# Governance defaults — can be overridden in code via `Tool.governance`.
+governance:
+  auto_run: ["summarise"]
+  requires_approval: []
+
+# Which models your agent uses. Buyers with model-specific compliance
+# rules filter on this.
+models_used:
+  - provider: "anthropic"
+    model: "claude-3.5-sonnet"
+
+# ── v0.6: brand the post-hire experience ─────────────────────────────
+# Approved fonts: inter, ibm_plex_sans, roboto, space_grotesk,
+#                 source_serif_pro, jetbrains_mono, system
+brand:
+  primary_color: "#2563EB"
+  accent_color:  "#F59E0B"
+  font_family:   "inter"
+  border_radius: "medium"
+
+# ── v0.6: declarative tool schema ────────────────────────────────────
+# Categories: read | write | communicate | analyse | act.
+# Renowide auto-generates Approve/Reject UI + typed SDK stubs from this.
+tools:
+  - name: "summarise_url"
+    display_name: "i18n:tool.summarise_url"
+    description: "Fetch a URL and return a 5-bullet summary"
+    category: "analyse"
+    requires_approval: false
+    inputs:
+      - name: "url"
+        type: "string"
+        required: true
+      - name: "max_bullets"
+        type: "integer"
+        default: 5
+
+# ── v0.6: Canvas Kit post-hire welcome ───────────────────────────────
+# Block types: header, section, markdown, date_picker, file_upload,
+#              checkbox, text_input, cta, image, info_callout, chart,
+#              code_block, divider, kpi, table, oauth_button,
+#              api_key_input, quick_reply, link_button,
+#              integration_button.
+post_hire:
+  welcome_canvas:
+    - type: "header"
+      text: "i18n:post_hire.title"
+    - type: "markdown"
+      source: |
+        **Welcome!** A few quick questions and I'll start summarising for
+        you. You can change any of this later from the dashboard.
+    - type: "date_picker"
+      id:    "start_date"
+      label: "When should I start?"
+      mode:  "date"
+    - type: "file_upload"
+      id:     "sample_doc"
+      label:  "Upload a sample document (optional)"
+      accept: ["application/pdf", "text/plain", "image/png"]
+      max_mb: 10
+
+# ── v0.6: Chat canvas with an A/B variant ────────────────────────────
+chat:
+  starter_prompts:
+    - "Summarise this URL"
+    - "Summarise this PDF"
+  canvas:
+    - type: "header"
+      text: "Summariser"
+    - type: "chart"
+      chart_type: "bar"
+      title: "Summaries this week"
+      labels: ["M", "T", "W", "T", "F", "S", "S"]
+      series:
+        - label: "completed"
+          data: [3, 5, 8, 4, 9, 0, 1]
+  variants:
+    - id: "compact"
+      weight: 1
+      blocks:
+        - type: "header"
+          text: "Quick view"
+    - id: "detailed"
+      weight: 2
+      blocks:
+        - type: "header"
+          text: "Full view"
+        - type: "code_block"
+          language: "json"
+          source: '{"status": "ready", "queue": 0}'
+
+# ── v0.6: localisation ───────────────────────────────────────────────
+# Any string in this manifest can reference `i18n:<key>` and Renowide
+# will substitute the user's language at render time.
+i18n:
+  en:
+    agent.tagline:        "Summarises any text into bullet points, under 200 tokens, audit-logged."
+    tool.summarise_url:   "Summarise a URL"
+    post_hire.title:      "Let's set you up"
+  de:
+    agent.tagline:        "Fasst Texte in Stichpunkte zusammen — bis 200 Tokens, auditiert."
+    tool.summarise_url:   "URL zusammenfassen"
+    post_hire.title:      "Lass uns einrichten"

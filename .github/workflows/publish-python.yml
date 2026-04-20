@@ -1,20 +1,28 @@
-name: Publish renowide-canvas to PyPI (Trusted Publishing)
+name: Publish Python packages to PyPI (Trusted Publishing)
 
-# Publishes renowide-canvas to PyPI whenever a matching tag is pushed.
-# Uses PyPI Trusted Publishing (OIDC) — no PyPI token required.
-# Configure on pypi.org → project → Publishing → Add trusted publisher
-# pointing at this workflow + environment.
+# Publishes either renowide-canvas or renowide-agent-sdk to PyPI
+# whenever a matching version tag is pushed. Uses PyPI Trusted
+# Publishing (OIDC) — no PyPI token required.
 #
-# Tag format: canvas-v0.2.0
+# Tag formats (each publishes exactly one package):
+#   canvas-v0.2.0     → python/renowide-canvas      → renowide-canvas
+#   agent-sdk-py-v0.4.0 → python/renowide-agent-sdk → renowide-agent-sdk
+#
+# Each project must be registered as a Trusted Publisher on pypi.org
+# pointing at this workflow + the `pypi-release` environment.
 
 on:
   push:
     tags:
       - 'canvas-v*'
+      - 'agent-sdk-py-v*'
   workflow_dispatch:
     inputs:
+      package:
+        description: 'Package to publish: canvas | agent-sdk'
+        required: true
       version:
-        description: 'Version in pyproject.toml (e.g. 0.2.0)'
+        description: 'Version in that package pyproject.toml (e.g. 0.4.0)'
         required: true
 
 permissions:
@@ -25,9 +33,6 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     environment: pypi-release
-    defaults:
-      run:
-        working-directory: python/renowide-canvas
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -37,32 +42,44 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install build + twine (twine only used for metadata checks)
+      - name: Install build backend
         run: pip install build hatchling
 
-      - name: Resolve version from tag or dispatch input
+      - name: Resolve package + version
         id: resolve
-        working-directory: .
         run: |
           set -euo pipefail
-          if [[ -n "${{ github.event.inputs.version }}" ]]; then
+          if [[ -n "${{ github.event.inputs.package }}" ]]; then
+            PKG="${{ github.event.inputs.package }}"
             VER="${{ github.event.inputs.version }}"
           else
             REF="${GITHUB_REF#refs/tags/}"
-            VER="${REF#canvas-v}"
+            case "$REF" in
+              canvas-v*)        PKG=canvas;    VER="${REF#canvas-v}"        ;;
+              agent-sdk-py-v*)  PKG=agent-sdk; VER="${REF#agent-sdk-py-v}"  ;;
+              *) echo "::error::Unknown tag format: $REF"; exit 1 ;;
+            esac
           fi
-          PKG_VERSION=$(python -c "import tomllib,sys; print(tomllib.loads(open('python/renowide-canvas/pyproject.toml','rb').read().decode())['project']['version'])")
+          case "$PKG" in
+            canvas)    DIR="python/renowide-canvas";    NAME="renowide-canvas"    ;;
+            agent-sdk) DIR="python/renowide-agent-sdk"; NAME="renowide-agent-sdk" ;;
+            *) echo "::error::Unknown package: $PKG"; exit 1 ;;
+          esac
+          PKG_VERSION=$(python -c "import tomllib; print(tomllib.loads(open('$DIR/pyproject.toml','rb').read().decode())['project']['version'])")
           if [[ "$PKG_VERSION" != "$VER" ]]; then
-            echo "::error::pyproject.toml version ($PKG_VERSION) does not match tag ($VER)"
+            echo "::error::$DIR/pyproject.toml version ($PKG_VERSION) does not match tag ($VER)"
             exit 1
           fi
+          echo "dir=$DIR"   >> "$GITHUB_OUTPUT"
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
           echo "version=$VER" >> "$GITHUB_OUTPUT"
-          echo "Publishing renowide-canvas==$VER"
+          echo "Publishing $NAME==$VER from $DIR"
 
       - name: Build sdist + wheel
+        working-directory: ${{ steps.resolve.outputs.dir }}
         run: python -m build
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          packages-dir: python/renowide-canvas/dist
+          packages-dir: ${{ steps.resolve.outputs.dir }}/dist

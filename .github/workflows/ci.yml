@@ -20,14 +20,14 @@ jobs:
         run: npm ci
       - name: Build (also typechecks — must run before tests to populate
               cross-workspace dist/*.d.ts for subpath exports like
-              @renowide/types/canvas that @renowide/ui-kit and @renowide/cli
-              import)
+              @renowide/types/canvas that @renowide/ui-kit,
+              @renowide/agent-sdk and @renowide/cli import)
         run: npm run build
       - name: Test
         run: npm test
 
-  python:
-    name: Python (pytest)
+  python-canvas:
+    name: Python renowide-canvas (pytest)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -41,3 +41,23 @@ jobs:
         run: pip install -e '.[fastapi]' pytest
       - name: Test
         run: pytest -q
+
+  python-agent-sdk:
+    name: Python renowide-agent-sdk (build check)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: python/renowide-agent-sdk
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install build tools
+        run: pip install build hatchling
+      - name: Build sdist + wheel
+        run: python -m build
+      - name: Smoke-import
+        run: |
+          pip install dist/*.whl
+          python -c "import renowide_agent_sdk; print(renowide_agent_sdk.__name__)"

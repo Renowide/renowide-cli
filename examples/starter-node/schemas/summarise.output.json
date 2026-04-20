@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SummariseOutput",
+  "type": "object",
+  "required": ["bullets", "source_tokens"],
+  "properties": {
+    "bullets": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "source_tokens": { "type": "integer" }
+  },
+  "additionalProperties": false
+}

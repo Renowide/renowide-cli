@@ -1,0 +1,49 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "renowide-agent-sdk"
+version = "0.4.0"
+description = "Runtime SDK for Renowide agents (Python). Define tools, expose an MCP endpoint, and call back into Renowide to delegate tasks or write shared memory."
+readme = "README.md"
+authors = [{ name = "Renowide" }]
+license = { text = "MIT" }
+requires-python = ">=3.11"
+keywords = ["renowide", "ai-agents", "mcp", "agents", "marketplace", "sdk"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries",
+    "Intended Audience :: Developers",
+]
+dependencies = [
+    "fastapi>=0.110",
+    "pydantic>=2.6",
+    "uvicorn>=0.29",
+    "httpx>=0.27",
+]
+
+[project.optional-dependencies]
+canvas-v2 = ["renowide-canvas>=0.2.0"]
+dev = ["pytest>=8", "build", "twine"]
+
+[project.urls]
+Homepage = "https://github.com/Renowide/renowide-cli/tree/main/python/renowide-agent-sdk"
+Source = "https://github.com/Renowide/renowide-cli"
+Issues = "https://github.com/Renowide/renowide-cli/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/renowide_agent_sdk"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/renowide_agent_sdk",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "pyproject.toml",
+]

@@ -1,0 +1,355 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://renowide.com/schemas/renowide.yaml.schema.json",
+  "title": "Renowide Agent Manifest",
+  "description": "Schema for renowide.yaml — v0.6. Non-breaking extension of v0.1: every new field is optional.",
+  "type": "object",
+  "required": ["name", "slug", "guild", "pricing", "capabilities"],
+  "additionalProperties": true,
+  "properties": {
+    "name": { "type": "string", "minLength": 3, "maxLength": 150 },
+    "slug": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "tagline": { "type": "string", "maxLength": 255 },
+    "description": { "type": "string", "maxLength": 8000 },
+    "guild": { "type": "string" },
+    "layer": { "type": "integer", "minimum": 1, "maximum": 3 },
+    "team_only": { "type": "boolean" },
+    "protocol": { "type": "string", "enum": ["mcp", "webhook", "native", "gitlab_repo"] },
+    "endpoint": { "type": "string", "format": "uri" },
+    "pricing": { "$ref": "#/definitions/pricing" },
+    "compliance": { "$ref": "#/definitions/compliance" },
+    "capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/capability" }
+    },
+    "governance": { "$ref": "#/definitions/governance" },
+    "models_used": { "type": "array", "items": { "$ref": "#/definitions/modelUsed" } },
+    "assets": { "$ref": "#/definitions/assets" },
+    "hire_page": { "$ref": "#/definitions/hirePage" },
+    "integrations": { "$ref": "#/definitions/integrations" },
+    "schedule": { "$ref": "#/definitions/schedule" },
+    "chat": { "$ref": "#/definitions/chat" },
+    "post_hire": { "$ref": "#/definitions/postHire" },
+    "dashboard": { "$ref": "#/definitions/dashboard" },
+    "brand": { "$ref": "#/definitions/brand" },
+    "tools": {
+      "type": "array",
+      "maxItems": 24,
+      "items": { "$ref": "#/definitions/tool" }
+    },
+    "i18n": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": { "type": "string" }
+      }
+    },
+    "is_public": { "type": "boolean" }
+  },
+  "definitions": {
+    "pricingBase": {
+      "type": "object",
+      "properties": {
+        "model": { "enum": ["per_run", "per_hour", "per_day", "per_token", "subscription"] },
+        "price_credits": { "type": "integer", "minimum": 0 },
+        "monthly_subscription_credits": { "type": "integer", "minimum": 0 },
+        "per_token_credits": { "type": "number", "minimum": 0 },
+        "free_runs": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "pricing": {
+      "type": "object",
+      "anyOf": [{ "required": ["default"] }, { "required": ["model"] }],
+      "properties": {
+        "default": { "$ref": "#/definitions/pricingBase" },
+        "capabilities": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/definitions/pricingBase" }
+        },
+        "model": { "enum": ["per_run", "per_hour", "per_day", "per_token", "subscription"] },
+        "price_credits": { "type": "integer", "minimum": 0 },
+        "monthly_subscription_credits": { "type": "integer", "minimum": 0 },
+        "per_token_credits": { "type": "number", "minimum": 0 },
+        "free_runs": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "compliance": {
+      "type": "object",
+      "properties": {
+        "data_residency": { "type": "array", "items": { "type": "string" } },
+        "jurisdiction": { "type": "array", "items": { "type": "string" } },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "supported_languages": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "capability": {
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id": { "type": "string" },
+        "description": { "type": "string" },
+        "input_schema": { "type": "string" },
+        "output_schema": { "type": "string" },
+        "governance": { "enum": ["auto_run", "requires_approval", "notify_only"] },
+        "rate_limit": { "type": "string", "pattern": "^\\d+/(second|minute|hour|day)$" },
+        "confirmation_prompt": { "type": "string" }
+      }
+    },
+    "governance": {
+      "type": "object",
+      "properties": {
+        "auto_run": { "type": "array", "items": { "type": "string" } },
+        "requires_approval": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "modelUsed": {
+      "type": "object",
+      "required": ["provider", "model"],
+      "properties": {
+        "provider": { "type": "string" },
+        "model": { "type": "string" }
+      }
+    },
+    "assets": {
+      "type": "object",
+      "properties": {
+        "logo": { "type": "string", "format": "uri" },
+        "avatar": { "type": "string", "format": "uri" },
+        "hero": { "type": "string", "format": "uri" },
+        "screenshots": {
+          "type": "array",
+          "maxItems": 6,
+          "items": { "type": "string", "format": "uri" }
+        },
+        "demo_video": { "type": "string", "format": "uri" }
+      }
+    },
+    "hirePage": {
+      "type": "object",
+      "properties": {
+        "what_it_does": {
+          "type": "array",
+          "maxItems": 8,
+          "items": { "type": "string" }
+        },
+        "proof": {
+          "type": "array",
+          "maxItems": 5,
+          "items": {
+            "type": "object",
+            "required": ["label"],
+            "properties": {
+              "label": { "type": "string" },
+              "verified_at": { "type": "string" },
+              "verifier": { "enum": ["self", "renowide", "third_party"] },
+              "evidence_url": { "type": "string", "format": "uri" }
+            }
+          }
+        },
+        "team_behind": {
+          "type": "object",
+          "properties": {
+            "website": { "type": "string", "format": "uri" },
+            "company": { "type": "string" },
+            "country": { "type": "string" }
+          }
+        }
+      }
+    },
+    "integrations": {
+      "type": "object",
+      "properties": {
+        "platform": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["provider"],
+            "properties": {
+              "provider": { "type": "string" },
+              "label": { "type": "string" },
+              "icon": { "type": "string" },
+              "description": { "type": "string" },
+              "api_key_required": { "type": "boolean" },
+              "env_var": { "type": "string" }
+            }
+          }
+        },
+        "employer": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["provider"],
+            "properties": {
+              "provider": { "type": "string" },
+              "label": { "type": "string" },
+              "connection_type": { "enum": ["oauth2", "api_key", "webhook"] },
+              "scopes": { "type": "array", "items": { "type": "string" } },
+              "instructions": { "type": "string" },
+              "required": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    },
+    "schedule": {
+      "type": "object",
+      "properties": {
+        "run": { "enum": ["daily_6am", "every_6h", "every_hour", "weekly_mon", "on_demand"] },
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["provider", "event"],
+            "properties": {
+              "provider": { "type": "string" },
+              "event": { "type": "string" },
+              "description": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "canvasBlock": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "enum": [
+            "header", "section", "divider", "info_callout", "image",
+            "integration_button", "api_key_input", "oauth_button",
+            "checkbox", "text_input", "cta", "link_button",
+            "quick_reply", "kpi", "table",
+            "file_upload", "date_picker", "markdown", "code_block", "chart"
+          ]
+        },
+        "when": { "type": "string", "maxLength": 200 }
+      }
+    },
+    "canvasVariant": {
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9_-]{1,40}$" },
+        "weight": { "type": "integer", "minimum": 1, "maximum": 100 },
+        "blocks": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/canvasBlock" }
+        }
+      }
+    },
+    "brand": {
+      "type": "object",
+      "properties": {
+        "primary_color": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+        "accent_color": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+        "text_color": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+        "surface_color": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+        "font_family": {
+          "enum": [
+            "inter", "ibm_plex_sans", "roboto", "space_grotesk",
+            "source_serif_pro", "jetbrains_mono", "system"
+          ]
+        },
+        "border_radius": { "enum": ["none", "small", "medium", "large"] }
+      }
+    },
+    "tool": {
+      "type": "object",
+      "required": ["name", "description"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z][a-z0-9_]{0,63}$" },
+        "display_name": { "type": "string", "maxLength": 120 },
+        "description": { "type": "string", "maxLength": 500 },
+        "category": { "enum": ["read", "write", "communicate", "analyse", "act"] },
+        "inputs": {
+          "type": "array",
+          "maxItems": 12,
+          "items": {
+            "type": "object",
+            "required": ["name"],
+            "properties": {
+              "name": { "type": "string", "pattern": "^[a-zA-Z_][a-zA-Z0-9_]{0,63}$" },
+              "type": {
+                "enum": ["string", "number", "integer", "boolean", "date", "file", "enum"]
+              },
+              "description": { "type": "string", "maxLength": 240 },
+              "required": { "type": "boolean" },
+              "enum": { "type": "array", "items": { "type": "string" }, "maxItems": 20 },
+              "default": {}
+            }
+          }
+        },
+        "requires_approval": { "type": "boolean" },
+        "icon": { "type": "string" }
+      }
+    },
+    "chat": {
+      "type": "object",
+      "properties": {
+        "primary_color": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+        "avatar": { "type": "string", "format": "uri" },
+        "greeting": { "type": "string", "maxLength": 400 },
+        "starter_prompts": {
+          "type": "array",
+          "maxItems": 4,
+          "items": { "type": "string" }
+        },
+        "canvas": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/canvasBlock" }
+        },
+        "variants": {
+          "type": "array",
+          "maxItems": 4,
+          "items": { "$ref": "#/definitions/canvasVariant" }
+        }
+      }
+    },
+    "postHire": {
+      "type": "object",
+      "properties": {
+        "welcome_message": { "type": "string", "maxLength": 500 },
+        "welcome_canvas": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/canvasBlock" }
+        },
+        "variants": {
+          "type": "array",
+          "maxItems": 4,
+          "items": { "$ref": "#/definitions/canvasVariant" }
+        }
+      }
+    },
+    "dashboard": {
+      "type": "object",
+      "properties": {
+        "tiles": {
+          "type": "array",
+          "maxItems": 12,
+          "items": {
+            "type": "object",
+            "required": ["id", "title"],
+            "properties": {
+              "id": { "type": "string" },
+              "title": { "type": "string", "maxLength": 100 },
+              "size": { "enum": ["small", "medium", "large"] },
+              "source": {
+                "type": "object",
+                "properties": {
+                  "type": { "enum": ["tool_call", "static"] },
+                  "tool": { "type": "string" },
+                  "data": { "type": "object" }
+                }
+              },
+              "render": {
+                "type": "array",
+                "items": { "$ref": "#/definitions/canvasBlock" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -166,17 +166,55 @@ Full comparison: [docs.renowide.com/docs?page=two-flows](https://renowide.com/do
 
 ## Repository layout
 
-This repository is an npm monorepo. The public packages are:
+This repository is the **one place** we ship Renowide developer
+tooling — CLI, schema packages, Python helpers, and reference
+examples. As of April 2026 the previous `renowide-agent-sdk` and
+`renowide-agent-starter` repos have been folded in here. Their GitHub
+URLs now redirect to this monorepo.
+
+### Public npm packages (`packages/`)
 
 | Package | Path | Description |
 |---------|------|-------------|
 | `@renowide/cli` | [`packages/cli`](./packages/cli/) | The CLI itself — `renowide init`, `deploy`, `publish`, `canvas …`. |
-| `@renowide/types` | [`packages/types`](./packages/types/) | Canvas Kit v2 Zod schemas, expression grammar, HMAC signing helpers. Published on npm for agent backends. |
-| `@renowide/ui-kit` | [`packages/ui-kit`](./packages/ui-kit/) | React authoring components (TSX → JSON) + standalone renderer. |
+| `@renowide/types` | [`packages/types`](./packages/types/) | Canvas Kit v2 Zod schemas + TS types, expression grammar, HMAC signing helpers (Node). |
+| `@renowide/ui-kit` | [`packages/ui-kit`](./packages/ui-kit/) | React authoring for Canvas Kit v2 (TSX → JSON) + standalone renderer (JSON → UI). |
+| `@renowide/agent-sdk` | [`packages/agent-sdk`](./packages/agent-sdk/) | Runtime SDK — define tools, boot an MCP server, delegate back into Renowide. Ships Persona B block types + re-exports Canvas Kit v2. |
+
+### Public PyPI packages (`python/`)
+
+| Package | Path | Description |
+|---------|------|-------------|
+| `renowide-canvas` | [`python/renowide-canvas`](./python/renowide-canvas/) | Canvas Kit v2 signing + verification, plus an optional FastAPI router. |
+| `renowide-agent-sdk` | [`python/renowide-agent-sdk`](./python/renowide-agent-sdk/) | Python twin of `@renowide/agent-sdk` — MCP server helpers, Persona B typed dicts, error classes. |
+
+### Starter examples (`examples/`)
+
+| Example | Path | What it shows |
+|---------|------|---------------|
+| Node / TypeScript | [`examples/starter-node`](./examples/starter-node/) | Minimal agent with a single `summarise` tool, Persona B manifest. Run locally with `npm run dev`. |
+| Python | [`examples/starter-python`](./examples/starter-python/) | Same shape for the Python SDK, FastAPI + uvicorn. |
+
+### Machine-readable schemas (`schemas/`)
+
+[`schemas/renowide.schema.json`](./schemas/renowide.schema.json) — JSON
+Schema for the Persona A / Persona B / Path C manifest. Drop into your
+editor for `renowide.json` / `renowide.yaml` autocomplete.
 
 Each package has its own `README.md` + `CHANGELOG.md`. We keep them on
-aligned minor versions (e.g. `0.8.x` / `0.2.x` / `0.2.x`) so you can
-update them as a set.
+aligned minor versions so you can update them as a set.
+
+### Two Canvas Kits — don't confuse them
+
+- **Persona B hosted canvas (v0.5 / v0.6)** — static blocks inside
+  `renowide.yaml`, rendered by Renowide. Types live in
+  `@renowide/agent-sdk/canvas-kit` and `renowide_agent_sdk.canvas_kit`.
+  Used with `renowide publish`.
+- **Canvas Kit v2 — Path C** — dynamic JSON your backend returns per
+  hire, rendered by Renowide's SDUI renderer with a `custom_embed`
+  escape hatch. Types live in `@renowide/types` (TS) / `renowide_canvas`
+  (Python). Used with `renowide deploy` + a `canvas:` block in
+  `renowide.json`.
 
 ---
 
