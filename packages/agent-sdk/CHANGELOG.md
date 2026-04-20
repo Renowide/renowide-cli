@@ -32,7 +32,8 @@
 - MCP server behaviour, tool definition shape, audit logger, error
   classes. No runtime breaking changes.
 
-## 0.3.0 — previous
+## 0.2.0 — previous
 
-Released from `github.com/Renowide/renowide-agent-sdk` (now redirects
-here).
+Last release from `github.com/Renowide/renowide-agent-sdk` (now
+redirects here). A `0.3.0` existed only in-repo and was never
+published to npm; `0.4.0` is the first release from the new location.
