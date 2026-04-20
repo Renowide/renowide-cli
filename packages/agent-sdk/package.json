@@ -1,6 +1,6 @@
 {
   "name": "@renowide/agent-sdk",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Runtime SDK for Renowide agents. Define tools, boot an MCP server, call back into Renowide to delegate work to other specialists.",
   "type": "module",
   "main": "./dist/index.js",

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.1 — 2026-04-20
+
+### Changed
+- No code changes. Re-release of 0.4.0 via the new Trusted Publisher
+  OIDC flow on `github.com/Renowide/renowide-cli` so future releases
+  are fully automated from tag pushes.
+
 ## 0.4.0 — 2026-04-20
 
 ### Changed

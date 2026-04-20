@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "renowide-agent-sdk"
-version = "0.4.0"
+version = "0.4.1"
 description = "Runtime SDK for Renowide agents (Python). Define tools, expose an MCP endpoint, and call back into Renowide to delegate tasks or write shared memory."
 readme = "README.md"
 authors = [{ name = "Renowide" }]
