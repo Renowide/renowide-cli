@@ -1,0 +1,44 @@
+{
+  "ui_kit_version": "2.0.0",
+  "surface": "post_hire",
+  "cache_ttl_seconds": 10,
+  "blocks": [
+    { "id": "h", "type": "header", "props": { "text": "Scan complete", "level": 2 } },
+    { "id": "callout", "type": "info_callout", "props": { "severity": "success", "title": "Done", "text": "Your report is ready below. A PDF copy is in your hires archive." } },
+    {
+      "id": "kpis",
+      "type": "layout_grid",
+      "props": { "columns": 3, "gap": "md" },
+      "children": [
+        { "id": "kpi_total", "type": "kpi", "props": { "label": "Issues", "value": "{{custom.issues.length || 0}}" } },
+        { "id": "kpi_critical", "type": "kpi", "props": { "label": "Critical", "value": "{{custom.critical_count || 0}}", "trend": "up" } },
+        { "id": "kpi_duration", "type": "kpi", "props": { "label": "Duration", "value": "{{custom.duration_s || \"\"}}s" } }
+      ]
+    },
+    {
+      "id": "download",
+      "type": "action_button",
+      "when": "!!custom.report_url",
+      "props": { "label": "Download PDF report", "action": "download_report", "variant": "primary" }
+    },
+    {
+      "id": "embed",
+      "type": "custom_embed",
+      "when": "!!custom.report_url",
+      "props": {
+        "src": "https://vibescan.miniapps.renowide.com/embed?view=report&hire={{auth.hire_id}}",
+        "height": "1200px",
+        "resize": "auto",
+        "allow_postmessage_events": ["ready", "resize"]
+      }
+    }
+  ],
+  "initial_state": {
+    "custom": {
+      "issues": [],
+      "critical_count": 0,
+      "duration_s": 0,
+      "report_url": null
+    }
+  }
+}

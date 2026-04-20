@@ -1,0 +1,12 @@
+{
+  "ui_kit_version": "2.0.0",
+  "surface": "hire_flow",
+  "cache_ttl_seconds": 30,
+  "blocks": [
+    { "id": "title", "type": "header", "props": { "text": "Security scan", "level": 2 } },
+    { "id": "intro", "type": "markdown", "props": { "source": "We'll scan one repo for exposed secrets and OWASP issues." } },
+    { "id": "repo_url", "type": "text_input", "props": { "label": "Repo URL", "placeholder": "https://gitlab.com/acme/app", "required": true } },
+    { "id": "agree", "type": "checkbox", "props": { "label": "I have authority to run a scan on this repo.", "required": true } },
+    { "id": "submit", "type": "action_button", "props": { "label": "Run scan", "action": "__submit_hire__", "disabled_when": "!form.agree || !form.repo_url" } }
+  ]
+}

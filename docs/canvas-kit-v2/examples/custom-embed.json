@@ -1,0 +1,31 @@
+{
+  "ui_kit_version": "2.0.0",
+  "surface": "hire_flow",
+  "cache_ttl_seconds": 10,
+  "blocks": [
+    { "id": "intro", "type": "markdown", "props": { "source": "Pick a repo in the widget below, then submit." } },
+    {
+      "id": "embed",
+      "type": "custom_embed",
+      "props": {
+        "src": "https://vibescan.miniapps.renowide.com/embed?mode=picker",
+        "height": "900px",
+        "min_height": "500px",
+        "resize": "auto",
+        "allow_postmessage_events": ["ready", "resize", "toast", "action"]
+      }
+    },
+    {
+      "id": "submit",
+      "type": "action_button",
+      "props": {
+        "label": "Run scan on {{custom.selected_repo || \"…\"}}",
+        "action": "__submit_hire__",
+        "disabled_when": "!custom.selected_repo"
+      }
+    }
+  ],
+  "initial_state": {
+    "custom": { "selected_repo": null }
+  }
+}

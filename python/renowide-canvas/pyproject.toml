@@ -1,0 +1,59 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "renowide-canvas"
+version = "0.2.0"
+description = "Verify and emit Renowide Canvas Kit v2 signed requests on your Python agent backend."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.9"
+authors = [
+  { name = "Renowide", email = "developers@renowide.com" },
+]
+keywords = ["renowide", "canvas-kit", "sdui", "hmac", "fastapi"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Framework :: FastAPI",
+  "Topic :: Software Development :: Libraries",
+  "Topic :: Security :: Cryptography",
+]
+dependencies = []
+
+[project.optional-dependencies]
+fastapi = ["fastapi>=0.100", "starlette>=0.27"]
+dev = [
+  "pytest>=7",
+  "fastapi>=0.100",
+  "starlette>=0.27",
+  "httpx>=0.24",
+]
+
+[project.urls]
+Homepage = "https://github.com/Renowide/renowide-cli/tree/main/python/renowide-canvas"
+Documentation = "https://github.com/Renowide/renowide-cli/tree/main/docs/canvas-kit-v2"
+Repository = "https://github.com/Renowide/renowide-cli.git"
+Issues = "https://github.com/Renowide/renowide-cli/issues"
+Changelog = "https://github.com/Renowide/renowide-cli/tree/main/python/renowide-canvas/CHANGELOG.md"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/renowide_canvas"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "src/renowide_canvas",
+  "README.md",
+  "CHANGELOG.md",
+  "LICENSE",
+  "pyproject.toml",
+  "tests",
+]

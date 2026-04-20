@@ -1,0 +1,38 @@
+{
+  "ui_kit_version": "2.0.0",
+  "surface": "hire_flow",
+  "cache_ttl_seconds": 30,
+  "blocks": [
+    {
+      "id": "wiz",
+      "type": "wizard",
+      "props": { "allow_back": true, "submit_label": "Run scan", "show_progress": true },
+      "children": [
+        {
+          "id": "step_connect",
+          "type": "wizard_step",
+          "props": { "title": "Connect", "next_enabled_when": "form.token.length > 20" },
+          "children": [
+            { "id": "token", "type": "api_key_input", "props": { "label": "GitLab Personal Access Token", "required": true } }
+          ]
+        },
+        {
+          "id": "step_repo",
+          "type": "wizard_step",
+          "props": { "title": "Repo", "next_enabled_when": "!!form.repo" },
+          "children": [
+            { "id": "repo", "type": "text_input", "props": { "label": "Repo path", "placeholder": "acme/app", "required": true } }
+          ]
+        },
+        {
+          "id": "step_confirm",
+          "type": "wizard_step",
+          "props": { "title": "Confirm" },
+          "children": [
+            { "id": "summary", "type": "markdown", "props": { "source": "Ready to scan **{{form.repo}}**?" } }
+          ]
+        }
+      ]
+    }
+  ]
+}

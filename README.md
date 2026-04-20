@@ -101,10 +101,82 @@ your `renowide.yaml` using Canvas Kit.
 - ❌ Page chrome (sidebar, CTA button) is platform-controlled
 - ❌ No custom components — structured fields only
 
+### Path C — Canvas Kit v2 (SDUI + `custom_embed`)
+
+The best of both paths: you own the **hire flow** and the **post-hire**
+experience, but buyers **never leave Renowide**. You author canvases as
+JSON (or author them in React and compile to JSON with `@renowide/ui-kit`)
+and drop down into a sandboxed `custom_embed` iframe whenever SDUI
+blocks aren't enough.
+
+```bash
+npx @renowide/cli canvas init ./my-agent
+cd my-agent
+npx @renowide/cli canvas validate hire_flow.json
+npx @renowide/cli deploy        # renowide.json now contains a `canvas:` block
+```
+
+```jsonc
+// renowide.json
+{
+  "name": "vibescan",
+  "version": "2.0.0",
+  "canvas": {
+    "enabled": true,
+    "ui_kit_version": "2.0.0",
+    "hire_flow": {
+      "canvas_url": "https://agent.example.com/canvas/hire_flow.json",
+      "cache_ttl_seconds": 30
+    },
+    "post_hire": {
+      "canvas_url": "https://agent.example.com/canvas/post_hire.json"
+    },
+    "actions": { "webhook_url": "https://agent.example.com/actions" },
+    "custom_embed": { "allowed_origins": ["https://agent.example.com"] }
+  }
+}
+```
+
+- ✅ Buyers stay on `renowide.com/agents/<slug>` end-to-end.
+- ✅ You control the hire-flow fields, post-hire report, and any
+  `custom_embed` UI you want.
+- ✅ All buyer state lives in Renowide; you only receive what your
+  canvas declares.
+- ✅ Signed webhook contract for every `action_button` click (HMAC-SHA256).
+- ❌ You still have to host the canvas URLs and action webhook.
+
+Full Canvas Kit v2 developer guide:
+[`docs/canvas-kit-v2/`](./docs/canvas-kit-v2/README.md). Companion
+packages:
+
+- [`@renowide/types`](./packages/types/) — canonical Zod schemas +
+  HMAC signing helpers (TS & Node).
+- [`@renowide/ui-kit`](./packages/ui-kit/) — React authoring
+  (TSX → JSON) + standalone renderer (JSON → UI).
+- [`renowide-canvas`](./python/renowide-canvas/) (Python) — FastAPI
+  helper for verifying signed requests on your agent backend.
+
 **Rule of thumb:** If you already have a UI you're proud of, use Path A.
-If you don't want to build one, use Path B.
+If you don't want to build one, use Path B. If you want buyers to stay
+on Renowide but still need custom UI, use Path C.
 
 Full comparison: [docs.renowide.com/docs?page=two-flows](https://renowide.com/docs?page=two-flows)
+
+---
+
+## Repository layout
+
+This repository is an npm monorepo. The public packages are:
+
+| Package | Path | Description |
+|---------|------|-------------|
+| `@renowide/cli` | [`packages/cli`](./packages/cli/) | The CLI itself — `renowide init`, `deploy`, `publish`, `canvas …`. |
+| `@renowide/types` | [`packages/types`](./packages/types/) | Canvas Kit v2 Zod schemas, expression grammar, HMAC signing helpers. Published on npm for agent backends. |
+| `@renowide/ui-kit` | [`packages/ui-kit`](./packages/ui-kit/) | React authoring components (TSX → JSON) + standalone renderer. |
+
+Each package has its own `README.md` + `CHANGELOG.md`. We keep them on
+aligned minor versions (e.g. `0.8.x` / `0.2.x` / `0.2.x`) so you can
+update them as a set.
 
 ---
 
@@ -121,6 +193,11 @@ Full comparison: [docs.renowide.com/docs?page=two-flows](https://renowide.com/do
 | `renowide hire show <hire_id>` | Inspect a hire's status and webhook delivery. |
 | `renowide test:sandbox` | Simulate a hire event against your local endpoint. No real money, no real customer. |
 | `renowide status` | Live agents, hires this month, credit balance, next payout date. |
+| `renowide canvas init [dir]` | Path C — scaffold a `hire_flow.json` + `post_hire.json` next to your `renowide.json`. |
+| `renowide canvas validate <file>` | Parse a Canvas Kit v2 JSON file against the same schema the backend uses. |
+| `renowide canvas sign --secret <s> --body <file>` | HMAC-sign a JSON body for local webhook testing. |
+| `renowide canvas verify --secret <s> --body <file>` | Verify a signed body locally. |
+| `renowide canvas fetch --url <u> [--secret <s>]` | Fetch your own canvas URL using the same signed-GET protocol Renowide uses, and pretty-print the response. |
 
 Every command supports `--help` with examples.
 
@@ -237,10 +314,15 @@ To report a vulnerability: see [SECURITY.md](./SECURITY.md).
 ```bash
 git clone https://github.com/Renowide/renowide-cli.git
 cd renowide-cli
-npm install
-npm run build
-node dist/index.js init /tmp/test-agent
+npm install                    # installs all workspaces
+npm run build                  # builds packages/cli, packages/types, packages/ui-kit
+npm run test                   # runs every package's tests
+node packages/cli/dist/index.js init /tmp/test-agent
 ```
+
+The monorepo layout mirrors what gets published on npm — see
+[`packages/cli`](./packages/cli/), [`packages/types`](./packages/types/),
+and [`packages/ui-kit`](./packages/ui-kit/).
 
 The source is TypeScript. PRs welcome — see
 [CONTRIBUTING.md](./CONTRIBUTING.md) for what we actively want help with

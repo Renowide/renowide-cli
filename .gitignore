@@ -28,6 +28,13 @@ npm-debug.log*
 # Coverage
 coverage/
 
+# Python virtualenvs + build artefacts (renowide-canvas)
+.venv/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+python/**/dist/
+
 # Local runtime credentials accidentally copied into the repo
 .renowide/
 renowide-credentials*

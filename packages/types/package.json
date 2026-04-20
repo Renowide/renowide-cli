@@ -1,0 +1,75 @@
+{
+  "name": "@renowide/types",
+  "version": "0.2.0",
+  "description": "Canonical Canvas Kit v2 schema, expression grammar, and signing helpers for Renowide external agents. Mirror of the Renowide backend pydantic schema — any drift breaks canvas rendering.",
+  "keywords": [
+    "renowide",
+    "canvas-kit",
+    "sdui",
+    "zod",
+    "typescript"
+  ],
+  "homepage": "https://github.com/Renowide/renowide-cli/tree/main/packages/types",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Renowide/renowide-cli.git",
+    "directory": "packages/types"
+  },
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./canvas": {
+      "types": "./dist/canvas.d.ts",
+      "import": "./dist/canvas.js"
+    },
+    "./expression": {
+      "types": "./dist/expression.d.ts",
+      "import": "./dist/expression.js"
+    },
+    "./canvas-events": {
+      "types": "./dist/canvas-events.d.ts",
+      "import": "./dist/canvas-events.js"
+    },
+    "./signing": {
+      "types": "./dist/signing.d.ts",
+      "import": "./dist/signing.js"
+    },
+    "./manifest": {
+      "types": "./dist/manifest.d.ts",
+      "import": "./dist/manifest.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "tsx --test test/*.test.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "tsx": "^4.19.0",
+    "@types/node": "^20.14.10"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

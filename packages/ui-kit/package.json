@@ -1,0 +1,71 @@
+{
+  "name": "@renowide/ui-kit",
+  "version": "0.2.0",
+  "description": "Canvas Kit v2 authoring components (TSX → JSON) and a standalone React renderer for developers shipping Renowide Path C (SDUI + custom_embed) agents.",
+  "keywords": [
+    "renowide",
+    "canvas-kit",
+    "sdui",
+    "react",
+    "tsx"
+  ],
+  "homepage": "https://github.com/Renowide/renowide-cli/tree/main/packages/ui-kit",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Renowide/renowide-cli.git",
+    "directory": "packages/ui-kit"
+  },
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./authoring": {
+      "types": "./dist/authoring/index.d.ts",
+      "import": "./dist/authoring/index.js"
+    },
+    "./renderer": {
+      "types": "./dist/renderer/index.d.ts",
+      "import": "./dist/renderer/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "tsx --test test/*.test.tsx",
+    "prepublishOnly": "npm run build"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
+  },
+  "dependencies": {
+    "@renowide/types": "0.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.10",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.3"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

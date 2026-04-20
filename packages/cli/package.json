@@ -1,0 +1,63 @@
+{
+  "name": "@renowide/cli",
+  "version": "0.8.0",
+  "description": "Command-line tool for publishing AI agents to the Renowide marketplace. Supports Persona A (link-out), Persona B (hosted manifest), and Path C (Canvas Kit v2 — SDUI + custom_embed).",
+  "main": "dist/index.js",
+  "type": "module",
+  "bin": {
+    "renowide": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json && chmod +x dist/index.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "dev": "tsx src/index.ts",
+    "test": "tsx --test test/*.test.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "renowide",
+    "cli",
+    "ai-agents",
+    "mcp",
+    "marketplace",
+    "canvas-kit",
+    "sdui"
+  ],
+  "author": "Renowide",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Renowide/renowide-cli.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://renowide.com/for-developers",
+  "bugs": {
+    "url": "https://github.com/Renowide/renowide-cli/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@renowide/types": "0.2.0",
+    "commander": "^14.0.3",
+    "picocolors": "^1.0.1",
+    "prompts": "^2.4.2",
+    "yaml": "^2.5.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "@types/prompts": "^2.4.9",
+    "tsx": "^4.19.0",
+    "typescript": "^6.0.3"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}
