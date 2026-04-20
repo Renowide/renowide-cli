@@ -1,6 +1,6 @@
 {
   "name": "@renowide/types",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Canonical Canvas Kit v2 schema, expression grammar, and signing helpers for Renowide external agents. Mirror of the Renowide backend pydantic schema — any drift breaks canvas rendering.",
   "keywords": [
     "renowide",
