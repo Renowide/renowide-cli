@@ -14,6 +14,13 @@ interface EarningsResp {
   total_credits_consumed: number;
   creator_earnings_credits: number;
   platform_fee_credits: number;
+  /**
+   * Optional server-provided EUR valuation for `creator_earnings_credits`.
+   * Preferred over any client-side credits-to-EUR constant so that if
+   * Renowide ever reprices credits, the old-CLI-in-the-wild reports the
+   * correct figure on the next `renowide status`.
+   */
+  creator_earnings_eur?: number | null;
   agents: Array<{
     id: string;
     name: string;
@@ -66,10 +73,10 @@ export async function cmdStatus(opts: { agent?: string }) {
   console.log(
     "  " +
       [
-        "slug".padEnd(28),
-        "status".padEnd(16),
-        "active".padEnd(8),
-        "total hires".padEnd(12),
+        padVisible("slug", 28),
+        padVisible("status", 16),
+        padVisible("active", 8),
+        padVisible("total hires", 12),
         "pricing",
       ].join("  "),
   );
@@ -83,10 +90,10 @@ export async function cmdStatus(opts: { agent?: string }) {
     console.log(
       "  " +
         [
-          a.agent_slug.padEnd(28),
-          statusBadge(a.status).padEnd(16),
-          String(a.active_hires).padEnd(8),
-          String(a.hire_count).padEnd(12),
+          padVisible(a.agent_slug, 28),
+          padVisible(statusBadge(a.status), 16),
+          padVisible(String(a.active_hires), 8),
+          padVisible(String(a.hire_count), 12),
           pricing,
         ].join("  "),
     );
@@ -96,7 +103,7 @@ export async function cmdStatus(opts: { agent?: string }) {
   console.log(pc.bold("earnings"));
   console.log(`  credits consumed:  ${earnings.total_credits_consumed.toLocaleString()}`);
   console.log(
-    `  your share:        ${earnings.creator_earnings_credits.toLocaleString()} credits  (~€${(earnings.creator_earnings_credits * 0.01).toFixed(2)})`,
+    `  your share:        ${earnings.creator_earnings_credits.toLocaleString()} credits${formatEurSuffix(earnings.creator_earnings_eur)}`,
   );
   console.log(`  platform/infra:    ${earnings.platform_fee_credits.toLocaleString()} credits`);
   console.log(pc.gray("  (full breakdown + payout history: renowide.com/creator/earnings)"));
@@ -107,4 +114,24 @@ function statusBadge(status: string): string {
   if (status === "pending_review") return pc.yellow("pending");
   if (status === "suspended") return pc.red("suspended");
   return status;
+}
+
+/**
+ * `padEnd` that measures visible width only — i.e. strips ANSI SGR
+ * escape sequences emitted by picocolors before counting. Without this,
+ * a green "active" (15 raw bytes, 6 visible) over-consumes `padEnd(16)`
+ * and every column after it drifts left. Intentionally inlined — this
+ * is the only caller — so we can ship without a `string-width` dep.
+ */
+// eslint-disable-next-line no-control-regex
+const ANSI_RE = /\x1b\[[0-9;]*m/g;
+export function padVisible(s: string, width: number): string {
+  const visible = s.replace(ANSI_RE, "").length;
+  if (visible >= width) return s;
+  return s + " ".repeat(width - visible);
+}
+
+function formatEurSuffix(eur: number | null | undefined): string {
+  if (typeof eur !== "number" || !Number.isFinite(eur)) return "";
+  return `  (~€${eur.toFixed(2)})`;
 }

@@ -33,7 +33,7 @@ export async function cmdSandbox(opts: { manifest: string; endpoint?: string; ru
   if (!endpoint) throw new Error("no endpoint — set it in renowide.yaml or pass --endpoint");
 
   const isLocal = /localhost|127\.0\.0\.1|::1/.test(endpoint);
-  const runs = Math.max(1, Number(opts.runs ?? 3));
+  const runs = parseRuns(opts.runs);
 
   if (isLocal) {
     await runLocalSandbox(endpoint, manifest.capabilities, runs);
@@ -115,6 +115,27 @@ async function runLocalSandbox(
     if (failed > 0) report.passed = false;
   }
   renderReport(report);
+}
+
+/**
+ * Coerce `--runs` into a positive integer. Rejects junk ("foo", "-3",
+ * "1.5") with a clear error instead of silently returning NaN →
+ * `for (let i=0; i<NaN; i++)` → zero iterations → misleading "sandbox
+ * passed" output with nothing actually exercised.
+ */
+export function parseRuns(raw: string | undefined): number {
+  if (raw === undefined) return 3;
+  const trimmed = String(raw).trim();
+  if (!/^\d+$/.test(trimmed)) {
+    throw new Error(
+      `--runs must be a positive integer (got ${JSON.stringify(raw)})`,
+    );
+  }
+  const n = Number.parseInt(trimmed, 10);
+  if (n < 1) {
+    throw new Error(`--runs must be >= 1 (got ${n})`);
+  }
+  return n;
 }
 
 function seedInputFor(toolId: string): Record<string, unknown> {

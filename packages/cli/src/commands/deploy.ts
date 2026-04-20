@@ -65,17 +65,30 @@ async function probeUrl(url: string, timeoutMs = 4000): Promise<{
   status: number | null;
   note: string;
 }> {
-  const ctl = new AbortController();
-  const timer = setTimeout(() => ctl.abort(), timeoutMs);
+  const deadline = Date.now() + timeoutMs;
+  const remaining = () => Math.max(100, deadline - Date.now());
+
+  const ctlHead = new AbortController();
+  const headTimer = setTimeout(() => ctlHead.abort(), timeoutMs);
   try {
-    const res = await fetch(url, { method: "HEAD", signal: ctl.signal }).catch(
+    // HEAD attempt. On non-Abort network errors (e.g. HEAD-unsupported
+    // servers that respond to GET only), retry with a fresh controller
+    // so the remaining deadline — not an already-aborted signal — gates
+    // the fallback.
+    const res = await fetch(url, { method: "HEAD", signal: ctlHead.signal }).catch(
       async (err) => {
         if (err?.name === "AbortError") throw err;
-        // Some servers block HEAD — retry with GET.
-        return fetch(url, { method: "GET", signal: ctl.signal });
+        clearTimeout(headTimer);
+        const ctlGet = new AbortController();
+        const getTimer = setTimeout(() => ctlGet.abort(), remaining());
+        try {
+          return await fetch(url, { method: "GET", signal: ctlGet.signal });
+        } finally {
+          clearTimeout(getTimer);
+        }
       },
     );
-    clearTimeout(timer);
+    clearTimeout(headTimer);
     // 2xx/3xx = healthy. 4xx = reachable but misconfigured (still counts as "DNS + TLS
     // resolved"). 5xx or network errors = red flag.
     const healthy = res.status >= 200 && res.status < 400;
@@ -87,7 +100,7 @@ async function probeUrl(url: string, timeoutMs = 4000): Promise<{
         : `${res.status} ${res.statusText || "error"}`;
     return { ok: reachable, status: res.status, note: label };
   } catch (err: any) {
-    clearTimeout(timer);
+    clearTimeout(headTimer);
     if (err?.name === "AbortError") {
       return { ok: false, status: null, note: `timed out after ${timeoutMs}ms` };
     }
@@ -445,10 +458,11 @@ export async function cmdDeploy(opts: {
     // bare 404. Remove this branch once the backend endpoint lands.
     if (err?.status === 404) {
       throw new Error(
-        "The /api/v1/agents/publish endpoint is not yet live on this Renowide " +
-          "instance. This CLI is v0.5.0 (Persona A preview); the backend lands " +
-          "in the next deploy. Track the rollout in " +
-          "RENOWIDE_PERSONA_A_ONRAMP.md.",
+        "The /api/v1/agents/publish endpoint is not live on this Renowide " +
+          "instance. If you are targeting a staging backend, confirm the " +
+          "Persona A (link-out) endpoints have been rolled out. If this is " +
+          "renowide.com and you still see 404, please file an issue at " +
+          "https://github.com/Renowide/renowide-cli/issues.",
       );
     }
     if (err?.status === 401) {
@@ -539,9 +553,12 @@ export async function cmdDeploy(opts: {
   }
 
   // ── cache slug + dashboard for subsequent commands ───────────────────────
-  // We intentionally do NOT cache the handoff_secret. That file lives next
-  // to the user's renowide.json and is committable / shareable with teammates.
-  const cachePath = path.join(path.dirname(configPath), ".renowide-deploy.json");
+  // We intentionally do NOT cache the handoff_secret. That file still
+  // contains a dashboard URL unique to the creator, so we ensure it is
+  // git-ignored before writing to avoid a casual `git add .` leaking it.
+  const cacheDir = path.dirname(configPath);
+  const cachePath = path.join(cacheDir, ".renowide-deploy.json");
+  ensureGitignored(cacheDir, ".renowide-deploy.json");
   const cache = {
     slug: resp.slug,
     dashboard_url: resp.dashboard_url,
@@ -550,4 +567,35 @@ export async function cmdDeploy(opts: {
   };
   fs.writeFileSync(cachePath, JSON.stringify(cache, null, 2), { mode: 0o644 });
   console.log(pc.gray(`  cached → ${path.relative(process.cwd(), cachePath)}`));
+}
+
+/** Append `pattern` to `.gitignore` in `dir` if not already present. */
+function ensureGitignored(dir: string, pattern: string): void {
+  const gi = path.join(dir, ".gitignore");
+  let current = "";
+  try {
+    current = fs.readFileSync(gi, "utf8");
+  } catch {
+    // .gitignore doesn't exist yet — also skip if this dir is not a
+    // git work-tree (i.e. no .git / no parent .git). Best-effort only.
+    if (!isInsideGitWorkTree(dir)) return;
+  }
+  const lines = current.split(/\r?\n/).map((l) => l.trim());
+  if (lines.includes(pattern)) return;
+  const sep = current.length === 0 || current.endsWith("\n") ? "" : "\n";
+  try {
+    fs.appendFileSync(gi, `${sep}${pattern}\n`);
+  } catch {
+    // non-fatal
+  }
+}
+
+function isInsideGitWorkTree(dir: string): boolean {
+  let cursor = path.resolve(dir);
+  while (true) {
+    if (fs.existsSync(path.join(cursor, ".git"))) return true;
+    const parent = path.dirname(cursor);
+    if (parent === cursor) return false;
+    cursor = parent;
+  }
 }

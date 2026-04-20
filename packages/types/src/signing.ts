@@ -102,16 +102,12 @@ export interface VerifyCanvasRequestArgs {
  * on failure. Call this from your `/canvas/hire_flow.json` + `/canvas/post_hire/...` handlers.
  */
 export function verifyCanvasRequest(args: VerifyCanvasRequestArgs): void {
-  const scheme = parseSignatureHeader(
-    args.headers["renowide-signature"] ?? args.headers["Renowide-Signature"],
-  );
-  const tsRaw = args.headers["x-renowide-timestamp"] ?? args.headers["X-Renowide-Timestamp"];
-  const requestId =
-    args.headers["x-renowide-request-id"] ?? args.headers["X-Renowide-Request-Id"];
-  const buyerId =
-    args.headers["x-renowide-buyer-id"] ?? args.headers["X-Renowide-Buyer-Id"];
-  const hireId =
-    args.headers["x-renowide-hire-id"] ?? args.headers["X-Renowide-Hire-Id"];
+  const headers = lowercaseHeaders(args.headers);
+  const scheme = parseSignatureHeader(headers["renowide-signature"]);
+  const tsRaw = headers["x-renowide-timestamp"];
+  const requestId = headers["x-renowide-request-id"];
+  const buyerId = headers["x-renowide-buyer-id"];
+  const hireId = headers["x-renowide-hire-id"];
 
   if (!tsRaw) throw new SignatureVerificationError("missing X-Renowide-Timestamp");
   if (!requestId) throw new SignatureVerificationError("missing X-Renowide-Request-Id");
@@ -152,10 +148,9 @@ export interface VerifyActionRequestArgs {
  * JSON.parse the body.
  */
 export function verifyActionRequest(args: VerifyActionRequestArgs): void {
-  const scheme = parseSignatureHeader(
-    args.headers["renowide-signature"] ?? args.headers["Renowide-Signature"],
-  );
-  const tsRaw = args.headers["x-renowide-timestamp"] ?? args.headers["X-Renowide-Timestamp"];
+  const headers = lowercaseHeaders(args.headers);
+  const scheme = parseSignatureHeader(headers["renowide-signature"]);
+  const tsRaw = headers["x-renowide-timestamp"];
   if (!tsRaw) throw new SignatureVerificationError("missing X-Renowide-Timestamp");
 
   checkClockSkew(
@@ -172,9 +167,34 @@ export function verifyActionRequest(args: VerifyActionRequestArgs): void {
 
 // ─── Private helpers ───────────────────────────────────────────────────────
 
+/**
+ * Case-insensitive header lookup — mirrors
+ * `renowide_canvas.signing._get_header` in the Python sibling. Any
+ * duplicate header names (which shouldn't happen for signing headers
+ * but we don't trust the caller) resolve to the *last* casing — same
+ * semantics as iterating a case-insensitive `Mapping.items()` in
+ * Starlette / Flask.
+ */
+function lowercaseHeaders(
+  headers: Record<string, string | undefined>,
+): Record<string, string | undefined> {
+  const out: Record<string, string | undefined> = Object.create(null);
+  for (const [k, v] of Object.entries(headers)) {
+    out[k.toLowerCase()] = v;
+  }
+  return out;
+}
+
 function parseSignatureHeader(raw: string | undefined): { version: string; hex: string } {
   if (!raw) throw new SignatureVerificationError("missing Renowide-Signature");
-  const [version, hex] = raw.split("=", 2);
+  // `split("=", 1)` in Python returns *at most 2* parts and puts the
+  // remainder into the second — the opposite of JS's `split(sep, limit)`
+  // which *truncates*. Mirror Python exactly by splitting on the FIRST
+  // `=` only, so a tampered `v1=abcd=extra` header behaves the same way
+  // on both verifiers (rejected by the hex-charset check below).
+  const eq = raw.indexOf("=");
+  const version = eq === -1 ? raw : raw.slice(0, eq);
+  const hex = eq === -1 ? "" : raw.slice(eq + 1);
   if (!version || !hex || version !== SIGNATURE_SCHEME_VERSION) {
     throw new SignatureVerificationError(
       `unsupported signature scheme (expected ${SIGNATURE_SCHEME_VERSION}=<hex>, got ${raw})`,
@@ -186,8 +206,19 @@ function parseSignatureHeader(raw: string | undefined): { version: string; hex: 
   return { version, hex };
 }
 
+/**
+ * Strict integer parser — mirrors Python's `int(raw)`. Unlike
+ * `Number.parseInt("1234abc", 10)` which accepts trailing garbage, this
+ * helper rejects any non-digit (other than a single leading `-`). That
+ * closes the cross-language divergence where a tampered
+ * `X-Renowide-Timestamp: 1700000000abc` passes the TS verifier but is
+ * rejected by the Python one.
+ */
 function parseIntSafe(v: string): number {
-  const n = Number.parseInt(v, 10);
+  if (!/^-?\d+$/.test(v.trim())) {
+    throw new SignatureVerificationError(`bad integer header: ${v}`);
+  }
+  const n = Number.parseInt(v.trim(), 10);
   if (!Number.isFinite(n)) {
     throw new SignatureVerificationError(`bad integer header: ${v}`);
   }

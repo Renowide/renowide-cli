@@ -44,8 +44,7 @@ import { cmdSandbox } from "./commands/sandbox.js";
 import { cmdStatus } from "./commands/status.js";
 import { cmdWhoami } from "./commands/whoami.js";
 import { loadConfig } from "./config.js";
-
-const VERSION = "0.8.0";
+import { VERSION } from "./version.js";
 
 async function main() {
   const program = new Command();

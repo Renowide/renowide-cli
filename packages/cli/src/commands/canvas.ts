@@ -182,6 +182,34 @@ function walkExpressions(canvas: { blocks: unknown[] }): string[] {
         const asBoolean = /_when$/.test(key) || key === "payload_from";
         check(value, `${path}.props.${key}`, asBoolean);
       }
+
+      // `wizard` blocks nest their substructure under `props.steps[*]`,
+      // each step carrying its own `when` + `children`. Without this,
+      // bad expressions inside wizard steps only surfaced server-side
+      // with worse error messages.
+      if (Array.isArray(block.props.steps)) {
+        block.props.steps.forEach((step: any, i: number) => {
+          if (!step || typeof step !== "object") return;
+          if (typeof step.when === "string") {
+            check(step.when, `${path}.props.steps[${i}].when`, true);
+          }
+          if (Array.isArray(step.children)) {
+            step.children.forEach((c: any, j: number) =>
+              visit(c, `${path}.props.steps[${i}].children[${j}]`),
+            );
+          }
+        });
+      }
+
+      // Modals / drawers host their body inside `props.content[]`.
+      for (const containerKey of ["content", "body", "items"]) {
+        const container = block.props[containerKey];
+        if (Array.isArray(container)) {
+          container.forEach((c: any, i: number) =>
+            visit(c, `${path}.props.${containerKey}[${i}]`),
+          );
+        }
+      }
     }
     if (Array.isArray(block.children)) {
       block.children.forEach((c: any, i: number) => visit(c, `${path}.children[${i}]`));
@@ -416,13 +444,17 @@ export async function cmdCanvasInit(opts: CanvasInitOpts): Promise<void> {
   console.log(pc.gray(`  → serve + test: see docs/canvas-kit-v2/README.md`));
 }
 
+// Hire-flow sample. The renderer writes each form field to
+// `form.<block.id>` (see packages/ui-kit/src/renderer/CanvasRenderer.tsx
+// around the CheckboxBlock impl), so the button's `disabled_when`
+// references `form.agree` directly. We do not seed `custom.agreed` —
+// there is no block that reads it, so it would be dead state and a
+// footgun for new devs (they'd change `custom.agreed` and wonder why
+// nothing flips).
 const HIRE_FLOW_SAMPLE = {
   ui_kit_version: CANVAS_KIT_VERSION,
   surface: "hire_flow",
   cache_ttl_seconds: 0,
-  initial_state: {
-    custom: { agreed: false },
-  },
   blocks: [
     {
       id: "heading",
@@ -440,7 +472,13 @@ const HIRE_FLOW_SAMPLE = {
     {
       id: "agree",
       type: "checkbox",
-      props: { label: "I agree to the terms" },
+      props: {
+        label: "I agree to the terms",
+        // `required: true` also drives Renowide's own validation at
+        // submit time. Keep it in sync with `disabled_when` below.
+        required: true,
+        default: false,
+      },
     },
     {
       id: "hire_cta",
@@ -449,6 +487,8 @@ const HIRE_FLOW_SAMPLE = {
         label: "Hire now",
         loading_label: "Processing…",
         action: "__submit_hire__",
+        // `form.agree` is a boolean (set by the checkbox above). The
+        // button stays disabled until the buyer checks the box.
         disabled_when: "!form.agree",
       },
     },
@@ -459,9 +499,6 @@ const POST_HIRE_SAMPLE = {
   ui_kit_version: CANVAS_KIT_VERSION,
   surface: "post_hire",
   cache_ttl_seconds: 0,
-  initial_state: {
-    custom: { ready: false },
-  },
   blocks: [
     {
       id: "welcome_heading",

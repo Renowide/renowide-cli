@@ -271,6 +271,87 @@ test("signing: known-answer canvas canonical string (parity with renowide-canvas
   );
 });
 
+test("signing: case-insensitive header lookup matches Python", () => {
+  // Python uses `starlette.datastructures.Headers` which is case-insensitive.
+  // Our TS verifier must match — uppercase / mixed-case headers should work
+  // interchangeably with the lowercase canonical form.
+  const ts = 1_700_000_000;
+  const sig = signCanvasRequest({
+    handoffSecret: "secret",
+    agentSlug: "vibescan",
+    surface: "hire_flow",
+    buyerId: null,
+    hireId: null,
+    requestId: "r1",
+    timestamp: ts,
+  });
+  verifyCanvasRequest({
+    handoffSecret: "secret",
+    headers: {
+      "Renowide-Signature": `v1=${sig}`,
+      "X-Renowide-Timestamp": String(ts),
+      "X-RENOWIDE-REQUEST-ID": "r1",
+    },
+    agentSlug: "vibescan",
+    surface: "hire_flow",
+    nowSeconds: ts,
+  });
+});
+
+test("signing: tampered timestamp with trailing garbage rejected (Python parity)", () => {
+  // `Number.parseInt("1700000000abc", 10)` returns 1700000000 silently —
+  // this used to slip past the TS verifier while the Python sibling
+  // correctly rejected it. After the fix both verifiers reject.
+  const ts = 1_700_000_000;
+  const sig = signCanvasRequest({
+    handoffSecret: "secret",
+    agentSlug: "vibescan",
+    surface: "hire_flow",
+    buyerId: null,
+    hireId: null,
+    requestId: "r1",
+    timestamp: ts,
+  });
+  assert.throws(
+    () =>
+      verifyCanvasRequest({
+        handoffSecret: "secret",
+        headers: {
+          "renowide-signature": `v1=${sig}`,
+          "x-renowide-timestamp": `${ts}abc`,
+          "x-renowide-request-id": "r1",
+        },
+        agentSlug: "vibescan",
+        surface: "hire_flow",
+        nowSeconds: ts,
+      }),
+    /bad integer header/,
+  );
+});
+
+test("signing: multi-equals signature header rejected (Python parity)", () => {
+  // Python's `split("=", 1)` takes only the FIRST `=` and puts the rest
+  // in the hex half — which then fails the 64-hex-char regex. Our TS
+  // verifier used to use `String.split("=", 2)` which silently truncated
+  // — letting `v1=abcd=extra` through as `{version: "v1", hex: "abcd"}`
+  // before the length check. Both verifiers must now reject.
+  assert.throws(
+    () =>
+      verifyCanvasRequest({
+        handoffSecret: "secret",
+        headers: {
+          "renowide-signature": `v1=${"0".repeat(64)}=extra`,
+          "x-renowide-timestamp": "1700000000",
+          "x-renowide-request-id": "r1",
+        },
+        agentSlug: "vibescan",
+        surface: "hire_flow",
+        nowSeconds: 1_700_000_000,
+      }),
+    SignatureVerificationError,
+  );
+});
+
 test("ManifestCanvasBlock: defaults applied", () => {
   const m = ManifestCanvasBlockSchema.parse({
     hire_flow: { canvas_url: "https://example.com/canvas/hire_flow.json" },

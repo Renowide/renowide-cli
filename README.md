@@ -110,10 +110,15 @@ and drop down into a sandboxed `custom_embed` iframe whenever SDUI
 blocks aren't enough.
 
 ```bash
-npx @renowide/cli canvas init ./my-agent
-cd my-agent
+# Scaffold a hire_flow.json next to your renowide.json (one file per surface).
+npx @renowide/cli canvas init --surface hire_flow
+npx @renowide/cli canvas init --surface post_hire
+
+# Offline schema + expression check — no network, no auth.
 npx @renowide/cli canvas validate hire_flow.json
-npx @renowide/cli deploy        # renowide.json now contains a `canvas:` block
+
+# Deploy the link-out agent — `renowide.json` now contains a `canvas:` block.
+npx @renowide/cli deploy
 ```
 
 ```jsonc
@@ -231,11 +236,13 @@ aligned minor versions so you can update them as a set.
 | `renowide hire show <hire_id>` | Inspect a hire's status and webhook delivery. |
 | `renowide test:sandbox` | Simulate a hire event against your local endpoint. No real money, no real customer. |
 | `renowide status` | Live agents, hires this month, credit balance, next payout date. |
-| `renowide canvas init [dir]` | Path C — scaffold a `hire_flow.json` + `post_hire.json` next to your `renowide.json`. |
-| `renowide canvas validate <file>` | Parse a Canvas Kit v2 JSON file against the same schema the backend uses. |
-| `renowide canvas sign --secret <s> --body <file>` | HMAC-sign a JSON body for local webhook testing. |
-| `renowide canvas verify --secret <s> --body <file>` | Verify a signed body locally. |
-| `renowide canvas fetch --url <u> [--secret <s>]` | Fetch your own canvas URL using the same signed-GET protocol Renowide uses, and pretty-print the response. |
+| `renowide canvas init --surface <hire_flow\|post_hire> [--out <path>]` | Path C — scaffold one canvas JSON file per surface next to your `renowide.json`. |
+| `renowide canvas validate <file> [--ui <version>]` | Parse a Canvas Kit v2 JSON file against the same schema the backend uses; optionally check renderer compatibility. |
+| `renowide canvas sign <url> --slug <s> --surface <hire_flow\|post_hire> [--buyer-id …] [--hire-id …] [--request-id …] [--secret …]` | Print HMAC-signed headers for a canvas GET. Does not call the URL; wire the output into `curl` / Postman. |
+| `renowide canvas fetch <url> --slug <s> --surface <hire_flow\|post_hire> [--secret …] [--no-validate]` | Sign and GET your own canvas URL using the same protocol Renowide uses, then validate the response. |
+| `renowide canvas verify --kind <canvas\|action> --signature v1=<hex> --ts <unix> [--slug … --surface … --request-id …] [--body <file>] [--secret …]` | Verify a signed request locally — handy when your webhook 401s in production. |
+
+`--secret` falls back to `RENOWIDE_HANDOFF_SECRET` for every `canvas …` subcommand.
 
 Every command supports `--help` with examples.
 

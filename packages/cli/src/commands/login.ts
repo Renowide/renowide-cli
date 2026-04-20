@@ -34,9 +34,11 @@
  *    ~/.renowide/credentials with 0600 permissions.
  */
 
+import { spawn } from "node:child_process";
 import pc from "picocolors";
 import { RenowideAPI } from "../api.js";
 import { loadConfig, saveCredentials } from "../config.js";
+import { DEVICE_CODE_CLIENT } from "../version.js";
 
 interface DeviceCodeResp {
   device_code: string;
@@ -69,7 +71,7 @@ export async function cmdLogin(opts: { api?: string; key?: string }) {
 
   console.log(pc.gray(`→ ${apiBase}`));
   const deviceCode = await api.post<DeviceCodeResp>("/api/v1/creator/cli/device-code", {
-    client: "renowide-cli/0.1.0",
+    client: DEVICE_CODE_CLIENT,
   });
 
   console.log("");
@@ -205,16 +207,17 @@ function sleep(ms: number) {
 }
 
 function tryOpenBrowser(url: string) {
-  const { spawn } = require("node:child_process");
-  const cmd =
-    process.platform === "darwin"
-      ? ["open", url]
-      : process.platform === "win32"
-      ? ["cmd", ["/c", "start", "", url]]
-      : ["xdg-open", [url]];
+  // Static ESM import of `spawn` at the top of the file. The previous
+  // `const { spawn } = require("node:child_process")` call crashed every
+  // interactive `renowide login` because this package is `"type": "module"`.
   try {
-    if (Array.isArray(cmd[1])) spawn(cmd[0] as string, cmd[1] as string[], { detached: true, stdio: "ignore" }).unref();
-    else spawn(cmd[0] as string, [cmd[1] as string], { detached: true, stdio: "ignore" }).unref();
+    if (process.platform === "darwin") {
+      spawn("open", [url], { detached: true, stdio: "ignore" }).unref();
+    } else if (process.platform === "win32") {
+      spawn("cmd", ["/c", "start", "", url], { detached: true, stdio: "ignore" }).unref();
+    } else {
+      spawn("xdg-open", [url], { detached: true, stdio: "ignore" }).unref();
+    }
   } catch {
     // non-fatal — the user can click the URL
   }

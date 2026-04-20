@@ -15,8 +15,12 @@ import path from "node:path";
 import prompts from "prompts";
 import pc from "picocolors";
 
-const STARTER_TARBALL =
-  "https://codeload.github.com/Renowide/renowide-agent-starter/tar.gz/refs/heads/main";
+// Download URL for the monorepo's starter examples. We pull `examples/`
+// from the `renowide-cli` main branch and `--strip-components` all the
+// way down to the picked starter directory, so the target dir ends up
+// flat (ready to `npm install` or `pip install -r`).
+const STARTER_REPO_TARBALL =
+  "https://codeload.github.com/Renowide/renowide-cli/tar.gz/refs/heads/main";
 
 export async function cmdInit(opts: { dir?: string; lang?: string; inPlace?: boolean }) {
   if (opts.inPlace) {
@@ -34,8 +38,9 @@ export async function cmdInit(opts: { dir?: string; lang?: string; inPlace?: boo
     throw new Error(`Target directory ${dir} already exists and is not empty.`);
   }
 
-  console.log(pc.gray(`→ downloading starter kit to ${target}`));
-  await downloadAndExtract(STARTER_TARBALL, target);
+  const starterSubdir = lang === "node" ? "starter-node" : "starter-python";
+  console.log(pc.gray(`→ downloading starter kit (${starterSubdir}) to ${target}`));
+  await downloadAndExtract(STARTER_REPO_TARBALL, target, `examples/${starterSubdir}`);
 
   console.log(pc.green(`✓ scaffolded ${dir}`));
   console.log("");
@@ -43,10 +48,10 @@ export async function cmdInit(opts: { dir?: string; lang?: string; inPlace?: boo
   console.log(pc.cyan(`    cd ${dir}`));
   console.log(pc.cyan(`    renowide preview         # see how your hire-page looks (no login)`));
   if (lang === "node") {
-    console.log(pc.cyan(`    cd node && npm install`));
+    console.log(pc.cyan(`    npm install`));
     console.log(pc.cyan(`    npm run dev              # run your MCP server`));
   } else {
-    console.log(pc.cyan(`    cd python && pip install -r requirements.txt`));
+    console.log(pc.cyan(`    pip install -r requirements.txt`));
     console.log(pc.cyan(`    uvicorn agent.server:app --reload --port 8787`));
   }
   console.log(pc.cyan(`    renowide publish --dry-run   # validate manifest, no API call`));
@@ -196,7 +201,7 @@ i18n:
   console.log(pc.cyan(`    renowide add block chart     # add a v0.6 block`));
 }
 
-async function downloadAndExtract(url: string, target: string) {
+async function downloadAndExtract(url: string, target: string, subdir?: string) {
   const res = await fetch(url);
   if (!res.ok || !res.body) {
     throw new Error(`failed to download starter: HTTP ${res.status}`);
@@ -206,8 +211,18 @@ async function downloadAndExtract(url: string, target: string) {
   const { Readable } = await import("node:stream");
   const { pipeline } = await import("node:stream/promises");
   const { spawn } = await import("node:child_process");
+  const os = await import("node:os");
 
-  const tarProc = spawn("tar", ["-xz", "--strip-components=1", "-C", target]);
+  // To stay portable between GNU tar (Linux) and BSD tar (macOS), we
+  // don't rely on tar's `--include` / `--wildcards` flags. Instead we
+  // extract the whole tarball into a throwaway directory and then move
+  // only the requested subdirectory into the target. Both tarballs are
+  // small (< 1 MB for the monorepo starters) so this is fine.
+  const extractRoot = subdir
+    ? fs.mkdtempSync(path.join(os.tmpdir(), "renowide-starter-"))
+    : target;
+
+  const tarProc = spawn("tar", ["-xz", "--strip-components=1", "-C", extractRoot]);
   tarProc.on("error", (e) => {
     throw new Error(`\`tar\` unavailable: ${e.message}. Install tar or download the starter manually.`);
   });
@@ -219,4 +234,15 @@ async function downloadAndExtract(url: string, target: string) {
       code === 0 ? resolve() : reject(new Error(`tar exited with code ${code}`)),
     ),
   );
+
+  if (subdir) {
+    const src = path.join(extractRoot, subdir);
+    if (!fs.existsSync(src)) {
+      throw new Error(`starter subdir ${subdir} not found in downloaded archive`);
+    }
+    for (const entry of fs.readdirSync(src)) {
+      fs.renameSync(path.join(src, entry), path.join(target, entry));
+    }
+    fs.rmSync(extractRoot, { recursive: true, force: true });
+  }
 }

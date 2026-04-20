@@ -352,7 +352,7 @@ function renderMarkdown(src: string): string {
 
     // Heading — level 1..3.
     const headMatch = /^(#{1,3})\s+(.+)$/.exec(trimmed);
-    if (headMatch && !trimmed.includes("\n")) {
+    if (headMatch && !trimmed.includes("\n") && headMatch[1] && headMatch[2]) {
       const level = headMatch[1].length;
       out.push(`<h${level}>${renderInline(headMatch[2])}</h${level}>`);
       continue;
@@ -399,7 +399,7 @@ function renderInline(raw: string): string {
   s = s.replace(/(^|[\s(])\*([^*\n]+?)\*(?=$|[\s.,!?;:)])/g, "$1<em>$2</em>");
   s = s.replace(/(^|[\s(])_([^_\n]+?)_(?=$|[\s.,!?;:)])/g, "$1<em>$2</em>");
   // Restore inline code.
-  s = s.replace(/\u0000CODE(\d+)\u0000/g, (_m, i) => `<code>${codes[Number(i)]}</code>`);
+  s = s.replace(/\u0000CODE(\d+)\u0000/g, (_m, i) => `<code>${codes[Number(i)] ?? ""}</code>`);
   return s;
 }
 
@@ -413,7 +413,7 @@ function fontStackFor(font: string): string {
     jetbrains_mono: "'JetBrains Mono', ui-monospace, monospace",
     system: "system-ui, -apple-system, Segoe UI, sans-serif",
   };
-  return map[font] ?? map.inter;
+  return map[font] ?? map.inter ?? "system-ui, sans-serif";
 }
 
 function radiusFor(v: string): string {

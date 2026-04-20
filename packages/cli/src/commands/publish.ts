@@ -10,7 +10,7 @@
 import pc from "picocolors";
 import { RenowideAPI } from "../api.js";
 import { requireCredentials } from "../config.js";
-import { readManifest, validateWhenExpressions, type Manifest } from "../manifest.js";
+import { readManifest, type Manifest } from "../manifest.js";
 
 interface PublishResp {
   id: string;
@@ -72,8 +72,12 @@ function summariseCanvas(m: Manifest): string[] {
 }
 
 export async function cmdPublish(opts: { manifest: string; dryRun?: boolean }) {
+  // `readManifest` already validates every `when` expression via
+  // `validateWhenExpressions`. We used to re-run it here with a
+  // "belt + braces" comment, but that is a pure duplicate: if readManifest
+  // succeeds, the re-run always succeeds; if it fails, readManifest would
+  // have thrown already. Removed.
   const manifest = readManifest(opts.manifest);
-  validateWhenExpressions(manifest); // belt + braces; readManifest already does this
 
   if (opts.dryRun) {
     console.log(pc.green("✓ manifest valid"));

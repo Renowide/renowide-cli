@@ -260,12 +260,13 @@ function injectYaml(source: string, topKey: string, targetKey: string, patch: st
 function findKeyLine(lines: string[], key: string, startIndent: number): number {
   const prefix = " ".repeat(startIndent) + key + ":";
   for (let i = 0; i < lines.length; i++) {
-    if (lines[i].startsWith(prefix)) return i;
+    if ((lines[i] ?? "").startsWith(prefix)) return i;
   }
   return -1;
 }
 
-function indentOf(line: string): number {
+function indentOf(line: string | undefined): number {
+  if (!line) return 0;
   const m = /^ */.exec(line);
   return m ? m[0].length : 0;
 }
@@ -274,10 +275,12 @@ function findNestedKey(lines: string[], parentIdx: number, key: string): number 
   const parentIndent = indentOf(lines[parentIdx]);
   const childPrefix = " ".repeat(parentIndent + 2) + key + ":";
   for (let i = parentIdx + 1; i < lines.length; i++) {
-    const ind = indentOf(lines[i]);
-    if (lines[i].trim() === "") continue;
+    const line = lines[i];
+    if (line === undefined) break;
+    const ind = indentOf(line);
+    if (line.trim() === "") continue;
     if (ind <= parentIndent) break;
-    if (lines[i].startsWith(childPrefix)) return i;
+    if (line.startsWith(childPrefix)) return i;
   }
   return -1;
 }
@@ -287,16 +290,18 @@ function appendUnderTopKey(lines: string[], topIdx: number, patch: string): stri
   const topIndent = indentOf(lines[topIdx]);
   let end = lines.length;
   for (let i = topIdx + 1; i < lines.length; i++) {
-    if (lines[i].trim() === "") continue;
-    if (indentOf(lines[i]) <= topIndent) {
+    const line = lines[i];
+    if (line === undefined) break;
+    if (line.trim() === "") continue;
+    if (indentOf(line) <= topIndent) {
       end = i;
       break;
     }
   }
   // If the key was `tools: []`, overwrite that inline list.
-  const keyLine = lines[topIdx];
+  const keyLine = lines[topIdx] ?? "";
   if (/:\s*\[\s*\]\s*$/.test(keyLine) || /:\s*$/.test(keyLine)) {
-    const keyName = keyLine.split(":")[0];
+    const keyName = keyLine.split(":")[0] ?? "";
     lines[topIdx] = `${keyName}:`;
   }
   const out = [...lines.slice(0, end), patch, ...lines.slice(end)];
@@ -305,7 +310,7 @@ function appendUnderTopKey(lines: string[], topIdx: number, patch: string): stri
 
 function appendUnderNestedKey(lines: string[], nestedIdx: number, patch: string): string {
   const nestedIndent = indentOf(lines[nestedIdx]);
-  const keyLine = lines[nestedIdx];
+  const keyLine = lines[nestedIdx] ?? "";
   // Inline empty list → rewrite.
   if (/:\s*\[\s*\]\s*$/.test(keyLine)) {
     const keyName = keyLine.replace(/:\s*\[\s*\]\s*$/, "");
@@ -313,8 +318,10 @@ function appendUnderNestedKey(lines: string[], nestedIdx: number, patch: string)
   }
   let end = lines.length;
   for (let i = nestedIdx + 1; i < lines.length; i++) {
-    if (lines[i].trim() === "") continue;
-    if (indentOf(lines[i]) <= nestedIndent) {
+    const line = lines[i];
+    if (line === undefined) break;
+    if (line.trim() === "") continue;
+    if (indentOf(line) <= nestedIndent) {
       end = i;
       break;
     }
