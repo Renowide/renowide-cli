@@ -204,17 +204,27 @@ editor for `renowide.json` / `renowide.yaml` autocomplete.
 Each package has its own `README.md` + `CHANGELOG.md`. We keep them on
 aligned minor versions so you can update them as a set.
 
-### Two Canvas Kits — don't confuse them
+### Two UI protocols — don't confuse them
 
-- **Persona B hosted canvas (v0.5 / v0.6)** — static blocks inside
-  `renowide.yaml`, rendered by Renowide. Types live in
-  `@renowide/agent-sdk/canvas-kit` and `renowide_agent_sdk.canvas_kit`.
-  Used with `renowide publish`.
-- **Canvas Kit v2 — Path C** — dynamic JSON your backend returns per
+Persona B and Path C both let Renowide render UI for your agent, but they
+are **different protocols** with different trade-offs. Memorise the names.
+
+- **Hosted Layout v0.6 (Persona B)** — static blocks inside
+  `renowide.yaml`, rendered by Renowide from your manifest at publish
+  time. Types live in `@renowide/agent-sdk/canvas-kit` (TS) and
+  `renowide_agent_sdk.canvas_kit` (Python). Used with `renowide publish`.
+  *Formerly called "Persona B hosted canvas" — same protocol, clearer
+  name.*
+- **Canvas Kit v2 (Path C)** — dynamic JSON your backend returns per
   hire, rendered by Renowide's SDUI renderer with a `custom_embed`
   escape hatch. Types live in `@renowide/types` (TS) / `renowide_canvas`
   (Python). Used with `renowide deploy` + a `canvas:` block in
   `renowide.json`.
+
+Neither is deprecated. Use Hosted Layout if your post-hire UI fits
+declarative fields and you don't want to run a backend for rendering.
+Use Canvas Kit v2 if you want dynamic, signed-per-hire UI with a custom
+UI escape hatch.
 
 ---
 

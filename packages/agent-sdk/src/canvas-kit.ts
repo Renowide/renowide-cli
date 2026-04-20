@@ -1,5 +1,9 @@
 /**
- * Canvas Kit — v0.5 / v0.6 block DSL for **Persona B hosted canvases**.
+ * Hosted Layout v0.6 — block DSL for **Persona B hosted agents**.
+ *
+ * Previously informally called "Persona B hosted canvas"; renamed to
+ * Hosted Layout to eliminate the naming collision with Canvas Kit v2.
+ * The protocol and schema are unchanged — only the name.
  *
  * These types describe the static blocks Renowide renders inside its own
  * buyer UI when you publish a Persona B agent (`renowide publish` with a
@@ -16,8 +20,8 @@
  * or directly from `@renowide/types/canvas`.
  *
  * TL;DR:
- *   Persona B (this file)  → static blocks in `renowide.yaml` → hosted by Renowide
- *   Path C (canvas-kit-v2) → dynamic JSON per hire  → hosted by you, rendered by Renowide
+ *   Persona B (this file)  → Hosted Layout v0.6: static blocks in `renowide.yaml` → hosted by Renowide
+ *   Path C (canvas-kit-v2) → Canvas Kit v2: dynamic JSON per hire  → hosted by you, rendered by Renowide
  */
 
 export interface BlockBase {

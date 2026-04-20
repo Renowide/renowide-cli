@@ -1,5 +1,9 @@
 """
-Canvas Kit — v0.5 / v0.6 block DSL for **Persona B hosted canvases**.
+Hosted Layout v0.6 — block DSL for **Persona B hosted agents**.
+
+Previously informally called "Persona B hosted canvas"; renamed to
+Hosted Layout to eliminate the naming collision with Canvas Kit v2.
+The protocol and schema are unchanged — only the name.
 
 These TypedDicts describe the static blocks Renowide renders inside its
 own buyer UI when you publish a Persona B agent (``renowide publish``
