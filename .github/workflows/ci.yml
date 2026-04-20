@@ -18,9 +18,10 @@ jobs:
           cache: npm
       - name: Install
         run: npm ci
-      - name: Typecheck
-        run: npm run typecheck --if-present
-      - name: Build
+      - name: Build (also typechecks — must run before tests to populate
+              cross-workspace dist/*.d.ts for subpath exports like
+              @renowide/types/canvas that @renowide/ui-kit and @renowide/cli
+              import)
         run: npm run build
       - name: Test
         run: npm test
