@@ -1,19 +1,31 @@
 name: Publish to npm (Trusted Publishing)
 
-# Publishes @renowide/cli to npm whenever a version tag is pushed.
+# Publishes @renowide/cli, @renowide/types, and @renowide/ui-kit to npm
+# whenever a matching version tag is pushed.
+#
+# Tag formats (each publishes exactly one workspace):
+#   cli-v0.8.0      → packages/cli       → @renowide/cli
+#   types-v0.2.0    → packages/types     → @renowide/types
+#   ui-kit-v0.2.0   → packages/ui-kit    → @renowide/ui-kit
+#
 # Uses npm Trusted Publishing (OIDC) — no NPM_TOKEN required.
-# Requires: Renowide/renowide-cli configured as a Trusted Publisher
-# for @renowide/cli in npmjs.com → package → Settings → Publishing access.
+# Each package must be configured as a Trusted Publisher pointing at
+# this workflow on npmjs.com → package → Settings → Publishing access.
 
 on:
   push:
     tags:
-      - 'v*'
+      - 'cli-v*'
+      - 'types-v*'
+      - 'ui-kit-v*'
   workflow_dispatch:
     inputs:
-      tag:
-        description: 'Version to publish (must exist in package.json, e.g. 0.5.1)'
-        required: false
+      workspace:
+        description: 'Workspace to publish: cli | types | ui-kit'
+        required: true
+      version:
+        description: 'Version in that workspace package.json (e.g. 0.8.0)'
+        required: true
 
 permissions:
   contents: read
@@ -39,19 +51,33 @@ jobs:
       - name: Install
         run: npm ci
 
-      - name: Verify version matches tag
-        if: startsWith(github.ref, 'refs/tags/v')
+      - name: Resolve workspace from tag or dispatch input
+        id: resolve
         run: |
-          PKG_VERSION=$(node -p "require('./package.json').version")
-          TAG_VERSION="${GITHUB_REF#refs/tags/v}"
-          if [ "$PKG_VERSION" != "$TAG_VERSION" ]; then
-            echo "::error::package.json version ($PKG_VERSION) does not match tag ($TAG_VERSION)"
+          set -euo pipefail
+          if [[ -n "${{ github.event.inputs.workspace }}" ]]; then
+            WS="${{ github.event.inputs.workspace }}"
+            VER="${{ github.event.inputs.version }}"
+          else
+            REF="${GITHUB_REF#refs/tags/}"
+            case "$REF" in
+              cli-v*)    WS=cli;    VER="${REF#cli-v}"    ;;
+              types-v*)  WS=types;  VER="${REF#types-v}"  ;;
+              ui-kit-v*) WS=ui-kit; VER="${REF#ui-kit-v}" ;;
+              *) echo "::error::Unknown tag format: $REF"; exit 1 ;;
+            esac
+          fi
+          PKG_VERSION=$(node -p "require('./packages/${WS}/package.json').version")
+          if [[ "$PKG_VERSION" != "$VER" ]]; then
+            echo "::error::packages/${WS}/package.json version ($PKG_VERSION) does not match tag version ($VER)"
             exit 1
           fi
-          echo "Publishing @renowide/cli@$PKG_VERSION"
+          echo "workspace=$WS" >> "$GITHUB_OUTPUT"
+          echo "version=$VER"  >> "$GITHUB_OUTPUT"
+          echo "Publishing @renowide/$WS@$VER"
 
-      - name: Build
+      - name: Build all workspaces (needed for inter-package type refs)
         run: npm run build
 
       - name: Publish with provenance
-        run: npm publish --access public --provenance
+        run: npm publish --access public --provenance --workspace=packages/${{ steps.resolve.outputs.workspace }}
