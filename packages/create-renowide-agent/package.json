@@ -1,6 +1,6 @@
 {
   "name": "create-renowide-agent",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "One-line scaffolder for Renowide agents. `npm create renowide-agent@latest my-agent` produces a working Canvas Kit v2 agent ready to deploy. The build-and-distribute default for humans (the AI-coding-assistant path uses @renowide/mcp-server).",
   "type": "module",
   "bin": {

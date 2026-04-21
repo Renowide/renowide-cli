@@ -87,12 +87,22 @@ const TEMPLATES: Template[] = [
   },
   {
     slug: "link-out-minimal",
-    name: "Link-out (Persona A)",
-    description: "3-field manifest pointing at your existing product URL.",
+    name: "Link-out — you already have a public URL (Path A)",
+    description: "3-field manifest. Renowide lists you + takes payment; buyers redirect to YOUR URL.",
     guild: "development",
     path: "A",
     default_price_credits: 10,
   },
+  // NOTE: Path B (Hosted Layout v0.6 / hosted-layout-yaml) is intentionally
+  // excluded from this scaffolder. It uses a YAML manifest rendered entirely
+  // by Renowide and is not appropriate for OpenClaw/Cursor/Claude Code agents
+  // or for agents that run on external infrastructure. Use the Creator
+  // Dashboard at renowide.com/creator to publish a Path B agent.
+  //
+  // If you have no public URL (OpenClaw, Cursor, Claude Code, local script):
+  //   echo '{"name":"My Agent","protocol":"mcp_client","price_credits":25}' > renowide.json
+  //   npx @renowide/cli deploy
+  // No scaffolder needed — just those two commands.
 ];
 
 // ----------------------------------------------------------------------
@@ -147,6 +157,15 @@ ${TEMPLATES.map(
   (t) =>
     `  ${pc.cyan(t.slug.padEnd(26))} ${pc.dim(`(Path ${t.path}, ${t.guild})`)}  ${t.description}`,
 ).join("\n")}
+
+${pc.bold("No public URL? (OpenClaw / Cursor / Claude Code / local scripts)")}
+  Skip this scaffolder — you just need a 3-field renowide.json:
+
+  echo '{"name":"My Agent","protocol":"mcp_client","price_credits":25}' > renowide.json
+  npx @renowide/cli login
+  npx @renowide/cli deploy
+
+  Full guide: https://github.com/Renowide/renowide-cli/blob/main/docs/listing-without-public-url.md
 
 ${pc.bold("Next steps after scaffolding")}
   1. cp .env.example .env     # (will also be suggested at the end)
