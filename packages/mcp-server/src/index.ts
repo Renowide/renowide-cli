@@ -52,6 +52,7 @@ import { CanvasResponseSchema } from "@renowide/types/canvas";
 const RenowideJsonSchema = z
   .object({
     name: z.string().min(2).max(80),
+    visibility: z.enum(["public", "draft"]).optional().default("public"),
     endpoint: z
       .string()
       .url()
@@ -439,14 +440,22 @@ const TOOLS = [
   {
     name: "renowide_deploy",
     description:
-      "Deploy a Persona A / Path C agent to Renowide. Calls POST /api/v1/agents/publish with the manifest. Returns { slug, dashboard_url, public_url, webhook_url, handoff_secret? }. IMPORTANT: `handoff_secret` is returned ONLY on first create; store it in the user's env vars as RENOWIDE_HANDOFF_SECRET immediately, it can never be retrieved again. Requires the user to be logged in.",
+      "Deploy a Path A / C / D agent to Renowide. Calls POST /api/v1/agents/publish. " +
+      "Returns { slug, visibility, is_public, dashboard_url, public_url, handoff_secret? }. " +
+      "IMPORTANT: `handoff_secret` is returned ONLY on first create — store it immediately. " +
+      "For Path D (no public URL): set protocol='mcp_client', omit endpoint, omit price if using visibility='draft'. " +
+      "visibility options: 'public' (default, listed in marketplace, price required) | " +
+      "'draft' (saved to creator dashboard only, not searchable, no price needed). " +
+      "Requires the user to be logged in.",
     inputSchema: {
       type: "object",
       properties: {
         manifest: {
           type: "object",
           description:
-            "The full renowide.json manifest. Run renowide_validate_manifest first.",
+            "The manifest. Minimum for draft: { name, protocol: 'mcp_client', visibility: 'draft' }. " +
+            "Minimum for public: { name, protocol: 'mcp_client', price_credits: 25 }. " +
+            "Run renowide_validate_manifest first if unsure.",
         },
       },
       required: ["manifest"],

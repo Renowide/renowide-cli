@@ -365,6 +365,12 @@ const RenowideJsonSchema = z
       .optional(),
     sandbox_endpoint: z.string().url().optional(),
 
+    // ── Visibility ────────────────────────────────────────────────────────
+    // "public"  (default) — live in marketplace, price required.
+    // "draft"             — saved to creator dashboard only, not searchable,
+    //                       price not required. Use to test / set up first.
+    visibility: z.enum(["public", "draft"]).optional().default("public"),
+
     // ── Canvas Kit v2 (Path C) ─────────────────────────────────────────────
     // Opt-in: if `canvas` is present, Renowide will fetch SDUI JSON from the
     // dev's server on hire-flow and post-hire surfaces and render it inside
@@ -386,6 +392,16 @@ const RenowideJsonSchema = z
         '"protocol": "mcp_client" if your agent has no public URL ' +
         '(OpenClaw / Cursor / Claude Code agents).',
       path: ["endpoint"],
+    },
+  )
+  .refine(
+    (d) => d.visibility === "draft" || !!d.price_credits,
+    {
+      message:
+        'price_credits is required for public listings. ' +
+        'Set "price_credits": 25 (or any value 1-10000), ' +
+        'or use "visibility": "draft" to save without going live.',
+      path: ["price_credits"],
     },
   )
   .refine(
@@ -451,7 +467,13 @@ export async function cmdDeploy(opts: {
         `    {\n` +
         `      "name": "My OpenClaw Agent",\n` +
         `      "protocol": "mcp_client",\n` +
-        `      "price_credits": 10\n` +
+        `      "price_credits": 25\n` +
+        `    }\n\n` +
+        `  To save as draft (no price needed, not yet public):\n` +
+        `    {\n` +
+        `      "name": "My Agent",\n` +
+        `      "protocol": "mcp_client",\n` +
+        `      "visibility": "draft"\n` +
         `    }\n\n` +
         `  Docs: https://github.com/Renowide/renowide-cli/blob/main/docs/openclaw-listing.md`,
     );
