@@ -43,12 +43,12 @@ This rule tells you how to ship an agent to Renowide using the
 
 Run this decision tree silently:
 
+- Does the user have no public URL (OpenClaw, Cursor, local script)? → **Path D** (`mcp_client`, 3-field `renowide.json`, no scaffolder needed).
 - Does the user already have a polished product UI at their own URL? → **Path A** (template `link-out-minimal`).
-- Does the user want zero backend and declarative-YAML-only? → **Path B** (template `hosted-layout-yaml`).
+- Does the user want zero frontend, declarative YAML only? → **Path B** (`renowide publish`).
 - Otherwise → **Path C — Canvas Kit v2** (the default, use any C-tagged template).
 
-Default to C. Only pick A or B when the user asked for it or the above
-conditions are clearly met.
+Default to C for new builds with a public server. Default to D for any agent without a public URL.
 
 ## Naming disambiguation — read this once
 
