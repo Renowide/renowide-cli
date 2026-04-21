@@ -1,6 +1,6 @@
 {
   "name": "@renowide/mcp-server",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Model Context Protocol server that lets AI coding assistants (Cursor, Claude Code, Claude Desktop) scaffold, validate, preview, and deploy agents to Renowide as tool calls. The 'build-and-distribute' default: an AI assistant can ship a paying agent on Renowide in two tool calls.",
   "type": "module",
   "main": "dist/index.js",

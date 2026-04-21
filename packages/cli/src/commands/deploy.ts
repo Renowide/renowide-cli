@@ -127,7 +127,18 @@ async function runDryRunPreview(
 
   // ── 1. Reachability probes ──────────────────────────────────────────────
   console.log(pc.bold("Pre-flight checks"));
-  const endpointProbe = await probeUrl(config.endpoint);
+
+  // mcp_client agents have no endpoint to probe — skip the URL check.
+  if (config.protocol === "mcp_client") {
+    console.log(pc.green("✓") + " Protocol: mcp_client (no public URL required)");
+    console.log(pc.gray("  Hire events are delivered via the Renowide MCP session."));
+    console.log(pc.gray("  Docs: https://github.com/Renowide/renowide-cli/blob/main/docs/openclaw-listing.md"));
+    console.log("");
+    console.log(pc.gray("(dry run complete — no API call made)"));
+    return;
+  }
+
+  const endpointProbe = await probeUrl(config.endpoint!);
   const endpointHealthy =
     endpointProbe.status !== null &&
     endpointProbe.status >= 200 &&
@@ -289,22 +300,42 @@ async function runDryRunPreview(
 
 const RenowideJsonSchema = z
   .object({
-    // REQUIRED — the three fields without which we cannot list an agent.
+    // REQUIRED — name and price are always required.
     name: z
       .string()
       .min(2, "name must be at least 2 chars")
       .max(80, "name must be ≤ 80 chars"),
-    endpoint: z
-      .string()
-      .url("endpoint must be a valid https:// URL")
-      .refine((u) => u.startsWith("https://"), {
-        message: "endpoint must use https:// (http is rejected in prod)",
-      }),
     price_credits: z
       .number()
       .int("price_credits must be a whole number")
       .positive("price_credits must be > 0")
       .max(10_000, "price_credits over 10 000 is almost certainly a typo"),
+
+    // ── Protocol ──────────────────────────────────────────────────────────
+    // "external"   (default) — buyer is redirected to `endpoint`; Renowide
+    //              fires a signed webhook on hire. Requires `endpoint`.
+    //
+    // "mcp_client" — for OpenClaw / Cursor / Claude Code agents that run
+    //              locally or on a private server. NO public URL needed.
+    //              Renowide routes hire events through the creator's
+    //              authenticated MCP session. The agent polls for work via
+    //              `renowide_poll_hires` and reports completion via
+    //              `renowide_complete_hire`. Creator authenticates once with
+    //              `renowide login --key rw_key_...` and the session handles
+    //              everything. Machine-to-machine payments in USDC on Base L2.
+    protocol: z
+      .enum(["external", "mcp_client"])
+      .optional()
+      .default("external"),
+
+    // endpoint — required for protocol "external", forbidden for "mcp_client".
+    endpoint: z
+      .string()
+      .url("endpoint must be a valid https:// URL")
+      .refine((u) => u.startsWith("https://"), {
+        message: "endpoint must use https:// (http is rejected in prod)",
+      })
+      .optional(),
 
     // OPTIONAL — sensible defaults applied server-side, shown here so the
     // dev knows what knobs exist without reading the docs.
@@ -344,9 +375,30 @@ const RenowideJsonSchema = z
     // and `@renowide/ui-kit` never drift.
     canvas: ManifestCanvasBlockSchema.optional(),
   })
-  // Forward-compat: unknown keys are warned about, not rejected. This lets
-  // us add fields server-side without breaking old CLIs. In zod 4, the old
-  // `.passthrough()` is spelled `.loose()` (same semantics).
+  // Cross-field validation: external protocol requires endpoint; mcp_client
+  // does not (and passing one is an error to prevent confusion).
+  .refine(
+    (d) => d.protocol === "mcp_client" || !!d.endpoint,
+    {
+      message:
+        'endpoint is required for protocol "external". ' +
+        'Add "endpoint": "https://your-agent.com" or switch to ' +
+        '"protocol": "mcp_client" if your agent has no public URL ' +
+        '(OpenClaw / Cursor / Claude Code agents).',
+      path: ["endpoint"],
+    },
+  )
+  .refine(
+    (d) => !(d.protocol === "mcp_client" && d.endpoint),
+    {
+      message:
+        '"mcp_client" agents must NOT have an endpoint — they receive work ' +
+        "through the Renowide MCP session, not a webhook URL. Remove the " +
+        '"endpoint" field.',
+      path: ["endpoint"],
+    },
+  )
+  // Forward-compat: unknown keys are warned about, not rejected.
   .loose();
 
 export type RenowideJson = z.infer<typeof RenowideJsonSchema>;
@@ -388,13 +440,20 @@ export async function cmdDeploy(opts: {
   if (!fs.existsSync(configPath)) {
     throw new Error(
       `No ${pc.bold("renowide.json")} at ${configPath}.\n  ` +
-        `Create one with the three required fields:\n` +
+        `Create one with the required fields.\n\n` +
+        `  For agents with a public URL (Persona A / Path C):\n` +
         `    {\n` +
         `      "name": "My Agent",\n` +
         `      "endpoint": "https://my-agent.com",\n` +
         `      "price_credits": 10\n` +
-        `    }\n  ` +
-        `See RENOWIDE_PERSONA_A_ONRAMP.md for all optional fields.`,
+        `    }\n\n` +
+        `  For OpenClaw / Cursor / Claude Code agents (no public URL needed):\n` +
+        `    {\n` +
+        `      "name": "My OpenClaw Agent",\n` +
+        `      "protocol": "mcp_client",\n` +
+        `      "price_credits": 10\n` +
+        `    }\n\n` +
+        `  Docs: https://github.com/Renowide/renowide-cli/blob/main/docs/openclaw-listing.md`,
     );
   }
 
@@ -450,7 +509,7 @@ export async function cmdDeploy(opts: {
   let resp: PublishResponse;
   try {
     resp = await api.post<PublishResponse>("/api/v1/agents/publish", {
-      protocol: "external",
+      protocol: config.protocol ?? "external",
       config,
     });
   } catch (err: any) {
@@ -487,8 +546,25 @@ export async function cmdDeploy(opts: {
     ),
   );
   console.log(`  Dashboard:    ${pc.underline(resp.dashboard_url)}`);
-  console.log(`  Webhook URL:  ${resp.webhook_url}`);
-  console.log(`                (Renowide → your server on hire events)`);
+
+  if (config.protocol === "mcp_client") {
+    // mcp_client mode: no webhook, no public URL needed.
+    // The agent receives work by polling renowide_poll_hires via MCP.
+    console.log(`  Protocol:     mcp_client`);
+    console.log(
+      `  ${pc.green("✓")} No public URL needed. Your agent receives work via the Renowide MCP session.`,
+    );
+    console.log(`  Next: install @renowide/mcp-server in your agent, then poll:`);
+    console.log(`    renowide_poll_hires()     — check for new hire events`);
+    console.log(`    renowide_accept_hire()    — acknowledge and start working`);
+    console.log(`    renowide_complete_hire()  — report result + trigger payout`);
+    console.log(
+      `  Docs: https://github.com/Renowide/renowide-cli/blob/main/docs/openclaw-listing.md`,
+    );
+  } else {
+    console.log(`  Webhook URL:  ${resp.webhook_url}`);
+    console.log(`                (Renowide → your server on hire events)`);
+  }
 
   if (resp.warnings && resp.warnings.length > 0) {
     console.log("");

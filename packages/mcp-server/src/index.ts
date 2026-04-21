@@ -507,6 +507,115 @@ const TOOLS = [
       additionalProperties: false,
     },
   },
+
+  // ── mcp_client protocol tools (no public URL needed) ────────────────────
+  // For OpenClaw agents, Cursor agents, Claude Code agents, and any agent
+  // that runs locally or on a private server without a public webhook URL.
+  // These three tools replace the webhook-based hire flow:
+  //   1. renowide_poll_hires   — check for new hire events (run in a cron/heartbeat)
+  //   2. renowide_accept_hire  — acknowledge and start working
+  //   3. renowide_complete_hire— report result, trigger payout
+  {
+    name: "renowide_poll_hires",
+    description:
+      "Check for new hire events on your mcp_client agents. Returns a list of " +
+      "hires where employers are waiting for your agent to start work. " +
+      "Call this periodically (e.g. every 30–60 seconds) in an OpenClaw heartbeat " +
+      "or cron routine. When a hire appears, call renowide_accept_hire to " +
+      "acknowledge it, do the work, then call renowide_complete_hire. " +
+      "Requires: agent must be listed with protocol='mcp_client' in renowide.json " +
+      "(no endpoint needed). Payouts: USDC on Base L2 (register wallet in dashboard) " +
+      "or EUR via SEPA — your choice.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        agent_slug: {
+          type: "string",
+          description:
+            "Filter to a specific agent slug. Omit to check all your mcp_client agents.",
+        },
+        limit: {
+          type: "integer",
+          minimum: 1,
+          maximum: 50,
+          description: "Max hires to return (default 10).",
+        },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "renowide_accept_hire",
+    description:
+      "Acknowledge a pending hire and mark it as running. " +
+      "Call immediately after renowide_poll_hires returns a hire, before starting work. " +
+      "This tells Renowide your agent received the hire and is processing it, " +
+      "preventing auto-refund due to timeout. " +
+      "Returns the hire's workspace context, employer details, and any instructions.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        hire_id: {
+          type: "string",
+          description: "The hire ID from renowide_poll_hires.",
+        },
+        message: {
+          type: "string",
+          description:
+            "Optional acknowledgement message shown to the employer (e.g. 'Got it, starting now.').",
+        },
+      },
+      required: ["hire_id"],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "renowide_complete_hire",
+    description:
+      "Report the result of a hire and mark it complete. " +
+      "Triggers payout to the creator's wallet (USDC on Base L2 or EUR via SEPA). " +
+      "Call after your agent finishes the work. Include a summary and any deliverable URLs. " +
+      "The employer has a review window to approve or dispute — payout is automatic " +
+      "when the review window closes without dispute.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        hire_id: {
+          type: "string",
+          description: "The hire ID to complete.",
+        },
+        status: {
+          type: "string",
+          enum: ["success", "partial", "failure"],
+          description:
+            "Outcome: 'success' = full delivery, 'partial' = some work done, 'failure' = could not complete.",
+        },
+        summary: {
+          type: "string",
+          description: "Human-readable summary of what was done (shown to the employer).",
+        },
+        artifacts: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              type: { type: "string", enum: ["url", "text", "json"] },
+              label: { type: "string" },
+              url: { type: "string" },
+              content: { type: "string" },
+            },
+          },
+          description: "Deliverable links, files, or structured data (optional).",
+        },
+        metrics: {
+          type: "object",
+          description: "Optional performance metrics (e.g. {items_processed: 42, time_seconds: 30}).",
+        },
+      },
+      required: ["hire_id", "status", "summary"],
+      additionalProperties: false,
+    },
+  },
 ] as const;
 
 // ----------------------------------------------------------------------
@@ -812,6 +921,76 @@ async function dispatch(name: string, args: Record<string, unknown>): Promise<un
       if (guild) qs.set("guild", guild);
       if (limit) qs.set("limit", String(limit));
       return apiRequest("GET", `/api/v1/public/agents/search?${qs}`);
+    }
+
+    // ── mcp_client protocol tools ──────────────────────────────────────────
+    // These three tools enable OpenClaw / Cursor / Claude Code agents to
+    // receive work and report results without a public webhook URL.
+
+    case "renowide_poll_hires": {
+      const token = requireToken();
+      const { agent_slug, limit: pollLimit } = args as {
+        agent_slug?: string;
+        limit?: number;
+      };
+      const qs = new URLSearchParams();
+      if (agent_slug) qs.set("agent_slug", agent_slug);
+      if (pollLimit) qs.set("limit", String(pollLimit));
+      const result = await apiRequest<{
+        hires: Array<{
+          hire_id: string;
+          agent_slug: string;
+          workspace_id: number;
+          created_at: string;
+          employer_note: string;
+          credits_allocated: number;
+          deadline_at: string | null;
+        }>;
+        count: number;
+        message?: string;
+      }>("GET", `/api/v1/creator/mcp-client/poll?${qs}`, undefined, token);
+      if (result.count === 0) {
+        return {
+          hires: [],
+          count: 0,
+          message:
+            result.message ||
+            "No pending hires. Your agent will appear here when a buyer hires it. " +
+            "Make sure your agent is listed with protocol='mcp_client' in renowide.json.",
+        };
+      }
+      return result;
+    }
+
+    case "renowide_accept_hire": {
+      const token = requireToken();
+      const { hire_id, message: ackMessage } = args as {
+        hire_id: string;
+        message?: string;
+      };
+      return apiRequest(
+        "POST",
+        `/api/v1/creator/mcp-client/hires/${encodeURIComponent(hire_id)}/accept`,
+        { message: ackMessage ?? "Got it, starting now." },
+        token,
+      );
+    }
+
+    case "renowide_complete_hire": {
+      const token = requireToken();
+      const { hire_id, status, summary, artifacts, metrics } = args as {
+        hire_id: string;
+        status: "success" | "partial" | "failure";
+        summary: string;
+        artifacts?: Array<{ type: string; label?: string; url?: string; content?: string }>;
+        metrics?: Record<string, unknown>;
+      };
+      return apiRequest(
+        "POST",
+        `/api/v1/creator/mcp-client/hires/${encodeURIComponent(hire_id)}/complete`,
+        { status, summary, artifacts: artifacts ?? [], metrics: metrics ?? {} },
+        token,
+      );
     }
 
     default:
