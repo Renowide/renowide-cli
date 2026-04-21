@@ -1,13 +1,15 @@
 name: Publish to npm (Trusted Publishing)
 
-# Publishes @renowide/cli, @renowide/types, @renowide/ui-kit, and
-# @renowide/agent-sdk to npm whenever a matching version tag is pushed.
+# Publishes every Renowide npm workspace to npm whenever a matching
+# version tag is pushed.
 #
 # Tag formats (each publishes exactly one workspace):
-#   cli-v0.8.0         → packages/cli        → @renowide/cli
-#   types-v0.2.0       → packages/types      → @renowide/types
-#   ui-kit-v0.2.0      → packages/ui-kit     → @renowide/ui-kit
-#   agent-sdk-v0.4.0   → packages/agent-sdk  → @renowide/agent-sdk
+#   cli-v0.8.0                   → packages/cli                    → @renowide/cli
+#   types-v0.2.0                 → packages/types                  → @renowide/types
+#   ui-kit-v0.2.0                → packages/ui-kit                 → @renowide/ui-kit
+#   agent-sdk-v0.4.0             → packages/agent-sdk              → @renowide/agent-sdk
+#   mcp-server-v0.1.0            → packages/mcp-server             → @renowide/mcp-server
+#   create-renowide-agent-v0.1.0 → packages/create-renowide-agent  → create-renowide-agent
 #
 # Uses npm Trusted Publishing (OIDC) — no NPM_TOKEN required.
 # Each package must be configured as a Trusted Publisher pointing at
@@ -20,10 +22,12 @@ on:
       - 'types-v*'
       - 'ui-kit-v*'
       - 'agent-sdk-v*'
+      - 'mcp-server-v*'
+      - 'create-renowide-agent-v*'
   workflow_dispatch:
     inputs:
       workspace:
-        description: 'Workspace to publish: cli | types | ui-kit | agent-sdk'
+        description: 'Workspace to publish: cli | types | ui-kit | agent-sdk | mcp-server | create-renowide-agent'
         required: true
       version:
         description: 'Version in that workspace package.json (e.g. 0.8.0)'
@@ -63,10 +67,12 @@ jobs:
           else
             REF="${GITHUB_REF#refs/tags/}"
             case "$REF" in
-              cli-v*)       WS=cli;       VER="${REF#cli-v}"       ;;
-              types-v*)     WS=types;     VER="${REF#types-v}"     ;;
-              ui-kit-v*)    WS=ui-kit;    VER="${REF#ui-kit-v}"    ;;
-              agent-sdk-v*) WS=agent-sdk; VER="${REF#agent-sdk-v}" ;;
+              create-renowide-agent-v*) WS=create-renowide-agent; VER="${REF#create-renowide-agent-v}" ;;
+              mcp-server-v*)            WS=mcp-server;            VER="${REF#mcp-server-v}"            ;;
+              cli-v*)                   WS=cli;                   VER="${REF#cli-v}"                   ;;
+              types-v*)                 WS=types;                 VER="${REF#types-v}"                 ;;
+              ui-kit-v*)                WS=ui-kit;                VER="${REF#ui-kit-v}"                ;;
+              agent-sdk-v*)             WS=agent-sdk;             VER="${REF#agent-sdk-v}"             ;;
               *) echo "::error::Unknown tag format: $REF"; exit 1 ;;
             esac
           fi
