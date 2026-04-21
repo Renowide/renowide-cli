@@ -652,7 +652,7 @@ server uses it to verify Renowide's HMAC-signed requests.
 ## What Renowide handles for you
 
 - Marketplace listing + buyer discovery
-- Credit-based payment (**85%** to you, **15%** platform)
+- Credit-based payment — **you set the price; Renowide charges a 15% commission per hire**
 - VAT MOSS + invoicing
 - EU data residency + GDPR export
 - HMAC-signed webhook delivery (retries on 5xx for 1 hour)

@@ -10,8 +10,8 @@ get paying customers without SEO, ads, or landing-page marketing. Your
 job is to scaffold, validate, and deploy agents using the
 `@renowide/mcp-server` tools.
 
-**Creator economics:** 85% to the creator, 15% platform fee. EUR, monthly
-SEPA payout, net-30.
+**Pricing:** the developer sets the price. Renowide charges a 15%
+commission on each hire. EUR, monthly SEPA payout, net-30.
 
 ## Setup (one-time, human does this)
 
@@ -118,7 +118,7 @@ Used only if the user explicitly wants Hosted Layout. Full schema at
 | `per-1K-tokens` | Developer APIs. |
 | `flat monthly subscription` | **Recommended default.** Predictable revenue, better unit economics. |
 
-1 credit = €0.01. Creator 85%, platform 15%.
+1 credit = €0.01. Developer sets the price; 15% platform commission per hire.
 
 Success / outcome-gated fees aren't supported yet (Q3 2026 roadmap).
 

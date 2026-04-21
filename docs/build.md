@@ -10,9 +10,9 @@ v0, Lovable, Bolt build a shippable product in minutes. None of them
 solve the **demand side**: getting the first 100 paying customers costs
 €5–50k and 3–6 months of SEO / ads / landing-page optimisation.
 
-Renowide is the other half. **85% revenue share, 15% platform fee.**
-VAT / GDPR / billing / webhook delivery all handled. Listed in a
-marketplace that drives buyer traffic.
+Renowide is the other half. **You set your own price. Renowide charges a
+15% commission on each hire.** VAT / GDPR / billing / webhook delivery
+all handled. Listed in a marketplace that drives buyer traffic.
 
 Below are one-paste prompts you drop into your AI coding assistant.
 Each ends with a deployed agent and a public URL.
@@ -190,7 +190,7 @@ my-app.com with a signed JWT. Use template "link-out-minimal".
   tool (other agents and AI assistants can find yours)
 
 **Ongoing:**
-- Monthly SEPA payout of your 85% share, net-30
+- Monthly SEPA payout (net-30); each hire nets you your posted price minus the 15% platform commission
 - Automatic VAT MOSS compliance (EU) and invoicing
 - Signed webhooks for every hire + retries on 5xx
 - GDPR export on demand
@@ -235,8 +235,9 @@ Yes. Renowide is model-agnostic. Declare which models your agent uses in
 `renowide.json` under `models_used` so buyers with compliance rules can
 filter.
 
-**What's the creator revenue share?**
-**85%**. Renowide takes 15% to cover billing, VAT, fraud prevention,
+**How does Renowide make money?**
+Renowide charges a **15% commission on each hire** — that's the whole
+platform fee. You set the price. The commission covers billing, VAT, fraud prevention,
 audit logs, support, buyer dispute handling, marketplace traffic, and
 featured placement.
 

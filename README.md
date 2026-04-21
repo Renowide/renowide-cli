@@ -2,7 +2,8 @@
 
 > **Build-and-distribute your AI product.** Cursor and Claude Code solved
 > *building*. Renowide solves *getting paying customers* — no SEO, no ads,
-> no landing-page marketing. **85% revenue share.** EUR. Monthly SEPA payout.
+> no landing-page marketing. **You set your own price. Renowide charges a
+> 15% commission per hire.** EUR. Monthly SEPA payout.
 
 ```
 npm create renowide-agent@latest my-agent
@@ -76,7 +77,7 @@ Renowide closes the loop.
 Renowide sits in the middle and handles the boring 90%:
 
 - Marketplace listing + buyer discovery + SEO
-- Credit-based payment (85% creator / 15% platform)
+- Credit-based payment — **you set the price; Renowide charges a 15% commission per hire**
 - VAT MOSS + invoicing + GDPR export
 - EU data residency
 - HMAC-signed webhook delivery + retries
@@ -371,21 +372,24 @@ The same env var works with any CI that can set secrets.
 
 ---
 
-## How much will I make?
+## Pricing and payout
 
-This is the question everybody asks and nobody documents.
+Pricing is simple: **you set the price. Renowide charges a 15% commission
+on each hire.** That's the whole platform fee.
 
-- **Revenue share:** you keep **85%** of credits your agent consumes.
-- **Billing model:** your choice per agent — per run, per day, per hour,
-  per 1,000 tokens, or a flat monthly subscription.
-- **Payout cadence:** monthly, on net-30 terms.
-- **Currency:** EUR. We pay via SEPA or international wire (your choice).
+- **You set the price.** Per run, per day, per hour, per 1,000 tokens,
+  or a flat monthly subscription. Any currency, any amount, any cadence
+  you pick — we just collect it.
+- **Platform commission:** 15% per hire. No listing fee, no monthly fee,
+  no seat fee, no exclusivity clause.
+- **Payout cadence:** monthly, net-30.
+- **Currency:** EUR. SEPA or international wire (your choice).
 - **Refunds:** Renowide handles buyer refunds; the deduction comes off
   your next payout, not your bank account.
 
-Quick back-of-envelope for a niche agent at **€99/month** subscription:
+Quick back-of-envelope for a niche agent you price at **€99/month**:
 
-| Active hires | Your monthly income |
+| Active hires | You receive (after 15% commission) |
 |---|---|
 | 5 customers | €420 |
 | 20 customers | €1,680 |

@@ -553,7 +553,7 @@ const RESOURCES = [
     uri: "renowide://docs/pricing-menu",
     name: "Pricing models menu (per-run / per-hour / subscription / …)",
     description:
-      "Five supported pricing models and when each is appropriate. 85% creator share, 15% platform fee.",
+      "Five supported pricing models. The developer sets the price; Renowide charges a 15% commission per hire.",
     mimeType: "text/markdown",
   },
 ];
@@ -951,7 +951,7 @@ Default path: **C (Canvas Kit v2)**. The buyer stays on \`renowide.com\` end-to-
 the developer owns the dynamic UI via JSON-or-TSX canvases, Renowide handles the
 listing + payment + webhook.
 
-Revenue split: **85% to creator, 15% platform**. EUR, monthly SEPA payouts.`;
+Pricing is simple: **the developer sets the price. Renowide charges a 15% commission per hire.** EUR, monthly SEPA payouts.`;
 
     case "renowide://docs/decision-tree":
       return `# Path A vs Path B vs Path C — decision tree
@@ -1057,9 +1057,12 @@ def verify(raw: bytes, header_sig: str, secret: str) -> bool:
 for both in most cases.`;
 
     case "renowide://docs/pricing-menu":
-      return `# Pricing models — Renowide menu
+      return `# Pricing — Renowide menu
 
-Pick ONE per agent. 85% to creator, 15% platform.
+**The developer sets the price. Renowide charges a 15% commission per hire.**
+That's the whole platform fee. No listing fee, no monthly fee, no seat fee.
+
+Pick ONE model per agent:
 
 | Model | When |
 |---|---|
@@ -1426,7 +1429,7 @@ renowide_deploy({ manifest: <contents of renowide.json> })
 ## What Renowide handles for you
 
 - Listing, discovery, marketplace card
-- Credit-based payment (85% yours, 15% platform)
+- Credit-based payment — you set the price; Renowide charges a 15% commission per hire
 - VAT MOSS + invoicing
 - EU data residency + GDPR export
 - HMAC-signed webhook delivery
