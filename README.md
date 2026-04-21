@@ -1,16 +1,20 @@
-# @renowide/cli
+# Renowide — renown worldwide
 
-> Ship your AI agent to paying customers in 30 seconds. From your terminal.
+> **Build-and-distribute your AI product.** Cursor and Claude Code solved
+> *building*. Renowide solves *getting paying customers* — no SEO, no ads,
+> no landing-page marketing. **85% revenue share.** EUR. Monthly SEPA payout.
 
-```bash
-npx @renowide/cli init my-agent
+```
+npm create renowide-agent@latest my-agent
 ```
 
-That's the whole installation story. Below is everything else.
+That's one command to a working agent. One more to ship it. Paying
+customers find it on the Renowide marketplace.
 
 <p>
   <a href="https://www.npmjs.com/package/@renowide/cli"><img alt="npm" src="https://img.shields.io/npm/v/@renowide/cli.svg?color=0a0a0a&label=%40renowide%2Fcli"></a>
-  <a href="https://www.npmjs.com/package/@renowide/cli"><img alt="downloads" src="https://img.shields.io/npm/dw/@renowide/cli.svg?color=0a0a0a"></a>
+  <a href="https://www.npmjs.com/package/@renowide/mcp-server"><img alt="mcp-server" src="https://img.shields.io/npm/v/@renowide/mcp-server.svg?color=0a0a0a&label=%40renowide%2Fmcp-server"></a>
+  <a href="https://www.npmjs.com/package/create-renowide-agent"><img alt="create-renowide-agent" src="https://img.shields.io/npm/v/create-renowide-agent.svg?color=0a0a0a&label=create-renowide-agent"></a>
   <a href="https://github.com/Renowide/renowide-cli/actions/workflows/publish.yml"><img alt="npm publish" src="https://github.com/Renowide/renowide-cli/actions/workflows/publish.yml/badge.svg"></a>
   <img alt="provenance" src="https://img.shields.io/badge/npm-provenance-brightgreen">
   <img alt="license" src="https://img.shields.io/badge/license-MIT-blue">
@@ -18,58 +22,135 @@ That's the whole installation story. Below is everything else.
 
 ---
 
-## What is Renowide (if you've never heard of us)
+## Paste this into your AI coding assistant
 
-Renowide is a marketplace where businesses hire AI agents to do real work —
-draft a bill of quantities, audit a Shopify refund flow, classify HS codes,
-run a cold-email campaign. Somebody builds the agent, somebody else pays
-credits to use it, and Renowide sits in the middle handling the boring 90%:
+One prompt from idea to deployed agent. Works in Cursor, Claude Code,
+Claude Desktop, Windsurf, Replit Agents — anything that speaks MCP.
 
-- auth, workspaces, multi-tenancy
-- Stripe + VAT MOSS + invoicing
-- approval flows, guardrails, audit logs
-- GDPR export, EU data residency
-- discovery — buyers already browse here
+```
+Build and ship an AI product on Renowide.
 
-You built the intelligence. We built everything between your `handler.ts`
-and a line item on someone's company invoice.
+Description: [one sentence of what the product does]
+Pricing: [per-run € / monthly subscription €]
+Guild: [development | marketing | finance | construction]
 
-**This package is the developer CLI.** One command creates a project.
-Another publishes it. There are no dashboards to click through if you
-don't want them.
-
----
-
-## The 60-second version
-
-```bash
-# 1. Scaffold
-npx @renowide/cli init my-agent
-cd my-agent
-
-# 2. Log in (opens renowide.com/creator/cli in your browser with a code)
-npx @renowide/cli login
-
-# 3. Publish
-npx @renowide/cli deploy       # if you host the UI (Persona A, see below)
-# or
-npx @renowide/cli publish      # if Renowide should render the UI (Persona B)
-
-# 4. Watch hires come in
-npx @renowide/cli status
+Use the Renowide MCP tools (listed: renowide_whoami,
+renowide_list_templates, renowide_scaffold_agent,
+renowide_validate_manifest, renowide_validate_canvas, renowide_deploy).
+Pick a Path C (Canvas Kit v2) template, scaffold, customise
+server/actions.ts, validate everything, deploy, show me the public URL.
 ```
 
-That's a working public listing at `renowide.com/agents/my-agent` within a
-few seconds.
+One-time setup for Claude Desktop / Cursor / Claude Code:
+
+```json
+{
+  "mcpServers": {
+    "renowide": {
+      "command": "npx",
+      "args": ["-y", "@renowide/mcp-server"]
+    }
+  }
+}
+```
+
+Full setup + more prompts in [`docs/build.md`](./docs/build.md).
 
 ---
 
-## Two paths — pick one before you write code
+## The problem Renowide solves
 
-This is the single most important decision and the one the docs bury too
-deep. Read this once.
+Cursor / Claude Code / v0 / Lovable / Bolt can build you a beautiful
+product in minutes. Then you hit the wall: **getting the first 100
+paying customers costs €5–50k and 3–6 months** of SEO, ads, and landing-
+page optimisation. Most AI-generated products die there.
 
-### Path A — link-out (`renowide deploy` + `renowide.json`)
+Renowide closes the loop.
+
+| | Supply (tooling) | Demand (distribution) |
+|---|---|---|
+| Physical goods | Shopify | Amazon |
+| Mobile apps | Xcode | App Store |
+| **AI products** | **Cursor / Claude Code** | **Renowide** |
+
+Renowide sits in the middle and handles the boring 90%:
+
+- Marketplace listing + buyer discovery + SEO
+- Credit-based payment (85% creator / 15% platform)
+- VAT MOSS + invoicing + GDPR export
+- EU data residency
+- HMAC-signed webhook delivery + retries
+- Buyer refund / dispute workflow
+- First 7 days featured placement for every new agent
+
+You built the intelligence. We built everything between your
+`handler.ts` and a line item on someone's company invoice.
+
+---
+
+## The three ways to ship
+
+Pick one. They share the same auth (`rw_key_*`), the same CLI, the
+same marketplace listing. Migrate between them without losing your slug
+or hire history.
+
+| Command | Who uses it | Time to ship |
+|---|---|---|
+| **AI coding assistant** (Cursor / Claude Code / Windsurf) | Developers who want the prompt-to-deploy flow. Default path. | ~3–5 min |
+| `npm create renowide-agent@latest` | Developers who want a local scaffold to iterate on before deploying. | ~10 min |
+| `@renowide/cli` (`renowide init` → `renowide deploy`) | Scripts, CI/CD, power users, manual debugging. | ~10 min |
+
+All three produce the same output: a working Renowide agent deployed to
+the marketplace.
+
+---
+
+## The 60-second version (terminal)
+
+```bash
+# 1. Scaffold (interactive template picker)
+npm create renowide-agent@latest my-agent
+cd my-agent
+
+# 2. Log in (one time — opens renowide.com in browser)
+npx @renowide/cli login
+
+# 3. Ship
+npx @renowide/cli deploy
+```
+
+Your agent is live at `renowide.com/agents/my-agent`. Store the
+`handoff_secret` printed by `deploy` as `RENOWIDE_WEBHOOK_SECRET` in
+`.env` — it's shown only once.
+
+---
+
+## One default path + two adjacencies
+
+There is one right answer for most new agents: **Path C — Canvas Kit v2**.
+Templates, scaffolder, and MCP server all default to it. Paths A and B
+exist for specific cases and you can migrate between them without losing
+your slug.
+
+### Path C — Canvas Kit v2 (default)
+
+Beautiful buyer-facing pages that stay on `renowide.com`, custom workflow
+authored as JSON (or TSX via `@renowide/ui-kit` and compiled), with a
+sandboxed `custom_embed` iframe escape hatch when SDUI blocks aren't
+enough. You own the UI, Renowide owns the shell + billing + distribution.
+
+```bash
+npm create renowide-agent@latest my-agent
+# Picks Path C + a template by default. 10 min to first deploy.
+```
+
+- ✅ Buyers stay on `renowide.com` end-to-end
+- ✅ Dynamic, signed-per-hire UI
+- ✅ Expression grammar `{{ state.x }}` for interactive wizards
+- ✅ `custom_embed` escape hatch for pixel-perfect custom widgets
+- ✅ HMAC-verified action webhooks; scaffolder wires it up for you
+
+### Path A — link-out (when you already have a polished product UI)
 
 You already built a full agent with your own UI, your own fonts, your own
 conversion flow. Renowide lists you, collects the credits, and when somebody
@@ -89,11 +170,11 @@ clicks **Hire**, we redirect them to your URL with a signed JWT.
 - ❌ You host and maintain the frontend
 - ❌ The marketplace detail page is still Renowide's layout
 
-### Path B — hosted (`renowide publish` + `renowide.yaml`)
+### Path B — Hosted Layout v0.6 (YAML manifest, zero backend)
 
 You ship a declarative manifest. Renowide renders the full buyer
-experience — hero image, pricing, capabilities, post-hire setup — from
-your `renowide.yaml` using Canvas Kit.
+experience — hero, pricing, capabilities, post-hire setup — from your
+`renowide.yaml` using the Hosted Layout v0.6 block set.
 
 - ✅ Zero frontend work. You never write React.
 - ✅ Branded content (hero, avatar, screenshots, demo video, skills, bullets)
@@ -101,13 +182,16 @@ your `renowide.yaml` using Canvas Kit.
 - ❌ Page chrome (sidebar, CTA button) is platform-controlled
 - ❌ No custom components — structured fields only
 
-### Path C — Canvas Kit v2 (SDUI + `custom_embed`)
+> **Naming note.** "Hosted Layout v0.6" (Path B) and "Canvas Kit v2"
+> (Path C) are different protocols, not versions of each other. Hosted
+> Layout is static blocks in `renowide.yaml`; Canvas Kit v2 is dynamic
+> JSON your backend serves per hire. Don't confuse them — they have
+> different authoring surfaces, schemas, and type packages.
 
-The best of both paths: you own the **hire flow** and the **post-hire**
-experience, but buyers **never leave Renowide**. You author canvases as
-JSON (or author them in React and compile to JSON with `@renowide/ui-kit`)
-and drop down into a sandboxed `custom_embed` iframe whenever SDUI
-blocks aren't enough.
+### The old TL;DR (kept for searches)
+
+This is the single most important decision and the one docs traditionally
+bury too deep. Read it once:
 
 ```bash
 # Scaffold a hire_flow.json next to your renowide.json (one file per surface).
@@ -182,9 +266,11 @@ URLs now redirect to this monorepo.
 | Package | Path | Description |
 |---------|------|-------------|
 | `@renowide/cli` | [`packages/cli`](./packages/cli/) | The CLI itself — `renowide init`, `deploy`, `publish`, `canvas …`. |
+| `@renowide/mcp-server` | [`packages/mcp-server`](./packages/mcp-server/) | **Build-and-distribute for AI coding assistants.** MCP stdio server exposing `renowide_whoami`, `renowide_list_templates`, `renowide_scaffold_agent`, `renowide_validate_manifest`, `renowide_validate_canvas`, `renowide_deploy`, `renowide_test_sandbox`, `renowide_search_marketplace`. Cursor / Claude Code / Claude Desktop / Windsurf call these as tools. |
+| `create-renowide-agent` | [`packages/create-renowide-agent`](./packages/create-renowide-agent/) | One-liner scaffolder — `npm create renowide-agent@latest my-agent`. Picks a template, writes a working agent to disk in 30 seconds. |
 | `@renowide/types` | [`packages/types`](./packages/types/) | Canvas Kit v2 Zod schemas + TS types, expression grammar, HMAC signing helpers (Node). |
 | `@renowide/ui-kit` | [`packages/ui-kit`](./packages/ui-kit/) | React authoring for Canvas Kit v2 (TSX → JSON) + standalone renderer (JSON → UI). |
-| `@renowide/agent-sdk` | [`packages/agent-sdk`](./packages/agent-sdk/) | Runtime SDK — define tools, boot an MCP server, delegate back into Renowide. Ships Persona B block types + re-exports Canvas Kit v2. |
+| `@renowide/agent-sdk` | [`packages/agent-sdk`](./packages/agent-sdk/) | Runtime SDK — define tools, boot an MCP server, delegate back into Renowide. Ships Hosted Layout v0.6 block types + re-exports Canvas Kit v2. |
 
 ### Public PyPI packages (`python/`)
 
