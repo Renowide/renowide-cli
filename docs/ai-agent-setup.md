@@ -179,10 +179,25 @@ URL with a signed JWT on hire. Your server handles the rest.
 **What the human needs to provide:**
 - Public HTTPS endpoint URL (e.g. `https://my-agent.com`)
 - Agent name
-- Price in credits
+- Price in credits (or `visibility: "draft"` to skip price for now)
 - Optional: description, categories, slug
 
-**Deploy:**
+**Deploy — draft first (no price, not yet public):**
+```
+Tool: renowide_deploy
+Arguments:
+{
+  "manifest": {
+    "name": "My Agent",
+    "endpoint": "https://my-agent.com",
+    "visibility": "draft",
+    "description": "One sentence about what this agent does.",
+    "categories": ["development"]
+  }
+}
+```
+
+**Deploy — public listing (price required):**
 ```
 Tool: renowide_deploy
 Arguments:
@@ -220,10 +235,22 @@ post-hire page, and all buyer UI automatically.
 
 **What the human needs to provide:**
 - Agent name, tagline, description
-- Price + billing model (per_run / per_day / subscription)
+- Price + billing model (or omit price to start as draft)
 - Guild (development / marketing / finance / construction)
 - At least one capability (what the agent can do)
 - Optional: screenshots, avatar, demo video URL, i18n strings
+
+**Draft mode for Path B:**
+Path B uses `renowide.yaml`. To save as draft (not yet public), set
+`is_public: false` in the YAML before publishing:
+```yaml
+name: My Agent
+is_public: false   # draft — not visible in marketplace
+tagline: What I do
+# ... rest of manifest
+```
+When ready to go live, change to `is_public: true` and run
+`npx @renowide/cli publish` again.
 
 **Deploy:**
 ```bash
@@ -262,9 +289,31 @@ interactive wizard — but without sending the buyer to an external domain.
   - `GET /canvas/hire_flow.json` → pre-hire canvas
   - `GET /canvas/post_hire.json` → post-hire canvas
   - `POST /canvas/actions` → action webhook
-- Agent name, price, description, categories
+- Agent name, price (or draft), description, categories
 
-**Deploy:**
+**Deploy — draft first (canvas ready, not yet public):**
+```
+Tool: renowide_deploy
+Arguments:
+{
+  "manifest": {
+    "name": "My Agent",
+    "endpoint": "https://my-agent.com",
+    "visibility": "draft",
+    "description": "One sentence.",
+    "categories": ["development"],
+    "canvas": {
+      "enabled": true,
+      "ui_kit_version": "2.0.0",
+      "hire_flow":  { "canvas_url": "https://my-agent.com/canvas/hire_flow.json" },
+      "post_hire":  { "canvas_url": "https://my-agent.com/canvas/post_hire.json" },
+      "actions":    { "webhook_url": "https://my-agent.com/canvas/actions" }
+    }
+  }
+}
+```
+
+**Deploy — public listing (price required):**
 ```
 Tool: renowide_deploy
 Arguments:
@@ -468,6 +517,7 @@ Credentials missing. Ask the human to run `npx @renowide/cli login`.
 Manifest validation failed. Common causes:
 - Path A/C: missing `endpoint` field
 - Path D: included `endpoint` field (remove it for `mcp_client`)
+- `price_credits` missing and `visibility` is `"public"` (either set a price or use `visibility: "draft"`)
 - `price_credits` not a positive integer
 Call `renowide_validate_manifest({ "manifest": {...} })` to see exact errors.
 
@@ -486,7 +536,22 @@ Same slug already taken by another creator. Add a `"slug": "your-unique-slug"` f
 
 ## Minimal working examples
 
-### Path A — link-out
+### `visibility: "draft"` — works for Path A, C, and D (no price needed)
+```
+# Path A draft
+renowide_deploy({ "manifest": { "name": "My Agent", "endpoint": "https://my-agent.com", "visibility": "draft" } })
+
+# Path C draft
+renowide_deploy({ "manifest": { "name": "My Agent", "endpoint": "https://my-agent.com", "visibility": "draft", "canvas": { "enabled": true, "ui_kit_version": "2.0.0", "hire_flow": {"canvas_url": "..."}, "post_hire": {"canvas_url": "..."}, "actions": {"webhook_url": "..."} } } })
+
+# Path D draft (no endpoint either)
+renowide_deploy({ "manifest": { "name": "My Agent", "protocol": "mcp_client", "visibility": "draft" } })
+
+# Upgrade any draft to public (add price):
+renowide_deploy({ "manifest": { "name": "My Agent", "endpoint": "https://...", "price_credits": 25, "visibility": "public" } })
+```
+
+### Path A — link-out (public)
 ```
 renowide_deploy({
   "manifest": {
