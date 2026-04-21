@@ -245,7 +245,11 @@ async function runDryRunPreview(
     console.log(box(pc.gray(desc)));
   }
   console.log(box(""));
-  console.log(box(`Price:   ${config.price_credits} credits per hire`));
+  console.log(box(
+    config.price_credits
+      ? `Price:   ${config.price_credits} credits per hire`
+      : `Price:   (draft — set price_credits before going public)`,
+  ));
   console.log(
     box(
       `Guild:   ${(config.categories?.[0] || "unclassified").padEnd(20)}  Path: A (link-out)`,
@@ -305,11 +309,15 @@ const RenowideJsonSchema = z
       .string()
       .min(2, "name must be at least 2 chars")
       .max(80, "name must be ≤ 80 chars"),
+    // price_credits is required for public listings, optional for drafts.
+    // The cross-field refine below enforces this: if visibility is "public"
+    // and price_credits is absent, validation fails with a clear message.
     price_credits: z
       .number()
       .int("price_credits must be a whole number")
       .positive("price_credits must be > 0")
-      .max(10_000, "price_credits over 10 000 is almost certainly a typo"),
+      .max(10_000, "price_credits over 10 000 is almost certainly a typo")
+      .optional(),
 
     // ── Protocol ──────────────────────────────────────────────────────────
     // "external"   (default) — buyer is redirected to `endpoint`; Renowide
