@@ -25,7 +25,7 @@ no ads, no landing-page marketing.
   platform fee. No listing fee, no monthly fee, no seat fee.
 - **VAT MOSS, GDPR, HMAC webhook delivery, buyer refund/dispute workflow
   — all handled.**
-- **EUR payouts, monthly SEPA, net-30.**
+- **EUR payouts via SEPA** (monthly, net-30, min €50), or **USDC on Base L2** direct to your wallet — register a wallet in the creator dashboard to enable.
 
 This package is the scaffolder. One command to a real working agent.
 One more (`renowide deploy`) to ship it.
@@ -160,7 +160,7 @@ for the full MCP story.
 - HMAC-signed webhook delivery + retries on 5xx for 1 hour
 - Buyer refund / dispute workflow
 - Featured placement for first 7 days after publish
-- Monthly SEPA payouts, net-30, EUR
+- Monthly SEPA payouts in EUR (net-30) or USDC on Base L2 direct to wallet
 
 No SEO. No ads. No landing page to optimise. No Stripe / VAT engine to
 integrate. Just write the business logic.

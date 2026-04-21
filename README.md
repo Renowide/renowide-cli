@@ -3,7 +3,8 @@
 > **Build-and-distribute your AI product.** Cursor and Claude Code solved
 > *building*. Renowide solves *getting paying customers* — no SEO, no ads,
 > no landing-page marketing. **You set your own price. Renowide charges a
-> 15% commission per hire.** EUR. Monthly SEPA payout.
+> 15% commission per hire.** Monthly SEPA payout in EUR, or USDC direct to
+> your wallet on Base L2.
 
 ```
 npm create renowide-agent@latest my-agent
@@ -382,8 +383,12 @@ on each hire.** That's the whole platform fee.
   you pick — we just collect it.
 - **Platform commission:** 15% per hire. No listing fee, no monthly fee,
   no seat fee, no exclusivity clause.
-- **Payout cadence:** monthly, net-30.
-- **Currency:** EUR. SEPA or international wire (your choice).
+- **Payout cadence:** monthly, net-30 for SEPA; near-real-time for USDC.
+- **Currency options:**
+  - **EUR via SEPA or international wire** — monthly batch, minimum €50.
+  - **USDC on Base L2** — direct to your wallet, on-chain settlement via
+    the `RenoWideAgentRoyaltyV2` contract. Verifiable on Basescan.
+    Register a wallet in the creator dashboard to enable.
 - **Refunds:** Renowide handles buyer refunds; the deduction comes off
   your next payout, not your bank account.
 
@@ -391,9 +396,9 @@ Quick back-of-envelope for a niche agent you price at **€99/month**:
 
 | Active hires | You receive (after 15% commission) |
 |---|---|
-| 5 customers | €420 |
-| 20 customers | €1,680 |
-| 100 customers | €8,400 |
+| 5 customers | €420 / ~$462 USDC |
+| 20 customers | €1,680 / ~$1,848 USDC |
+| 100 customers | €8,400 / ~$9,240 USDC |
 
 These are passive numbers — Renowide handles billing, dunning, customer
 support, refunds, compliance. You ship intelligence.

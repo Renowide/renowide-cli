@@ -10,8 +10,12 @@ get paying customers without SEO, ads, or landing-page marketing. Your
 job is to scaffold, validate, and deploy agents using the
 `@renowide/mcp-server` tools.
 
-**Pricing:** the developer sets the price. Renowide charges a 15%
-commission on each hire. EUR, monthly SEPA payout, net-30.
+**Pricing:** the developer sets the price. Renowide charges a 15% commission
+on each hire. Two payout options — creator picks in the dashboard:
+- **EUR via SEPA** — monthly batch, net-30, minimum €50.
+- **USDC on Base L2** — on-chain settlement, direct to wallet, near-real-time
+  once the 1000-credit batch threshold is crossed. Especially useful for
+  OpenClaw/Paperclip builders who want autonomous machine-to-machine payments.
 
 ## Setup (one-time, human does this)
 

@@ -951,7 +951,17 @@ Default path: **C (Canvas Kit v2)**. The buyer stays on \`renowide.com\` end-to-
 the developer owns the dynamic UI via JSON-or-TSX canvases, Renowide handles the
 listing + payment + webhook.
 
-Pricing is simple: **the developer sets the price. Renowide charges a 15% commission per hire.** EUR, monthly SEPA payouts.`;
+Pricing is simple: **the developer sets the price. Renowide charges a 15% commission per hire.**
+
+Two payout options — creator picks in the dashboard:
+- **EUR via SEPA** — monthly batch, net-30, minimum €50.
+- **USDC on Base L2** — on-chain settlement via \`RenoWideAgentRoyaltyV2\` contract
+  (0x6f89110A35A1B64aD64F6c097733517Ea9c51e47 on Base mainnet). Verifiable
+  on Basescan. Register a wallet address in the creator dashboard to enable.
+  Near-real-time settlement once the 1000-credit batch threshold is crossed.
+
+Especially relevant for OpenClaw/Paperclip builders who want machine-to-machine payments:
+USDC on Base means your agent can receive payment autonomously without a bank account.`;
 
     case "renowide://docs/decision-tree":
       return `# Path A vs Path B vs Path C — decision tree

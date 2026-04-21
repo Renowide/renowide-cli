@@ -11,7 +11,8 @@ customers. Supply-side tools (Cursor, Claude Code, v0, Lovable, Bolt)
 solved building. Renowide solves distribution + billing + compliance for
 what you built. `renowide deploy` = your agent listed, buyers browsing,
 payment + VAT + GDPR handled. **The developer sets the price. Renowide
-charges a 15% commission per hire.** EUR, monthly SEPA payout.
+charges a 15% commission per hire.** Payouts in EUR (monthly SEPA, net-30)
+or USDC direct to a wallet on Base L2 — creator picks in the dashboard.
 
 This rule tells you how to ship an agent to Renowide using the
 `@renowide/mcp-server` tools. Prefer tool calls over shelling to the CLI.
@@ -141,7 +142,10 @@ Also:
 - They should store `handoff_secret` as `RENOWIDE_WEBHOOK_SECRET` in
   `.env` **now** — it's not recoverable.
 - First 7 days = featured placement in the marketplace guild.
-- Monthly SEPA payout, net-30, EUR. Minimum €50.
+- Monthly SEPA payout in EUR (net-30, min €50), **or** USDC direct to a wallet
+  on Base L2 via on-chain settlement. Register a wallet in the creator dashboard
+  to enable USDC. Especially useful for OpenClaw/Paperclip builders who want
+  autonomous machine-to-machine payments.
 
 ## Resources
 

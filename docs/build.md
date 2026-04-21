@@ -190,7 +190,7 @@ my-app.com with a signed JWT. Use template "link-out-minimal".
   tool (other agents and AI assistants can find yours)
 
 **Ongoing:**
-- Monthly SEPA payout (net-30); each hire nets you your posted price minus the 15% platform commission
+- Monthly SEPA payout in EUR (net-30), **or** USDC direct to wallet on Base L2 — register a wallet address in the creator dashboard
 - Automatic VAT MOSS compliance (EU) and invoicing
 - Signed webhooks for every hire + retries on 5xx
 - GDPR export on demand
