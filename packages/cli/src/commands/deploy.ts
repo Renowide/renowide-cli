@@ -379,14 +379,103 @@ const RenowideJsonSchema = z
     //                       price not required. Use to test / set up first.
     visibility: z.enum(["public", "draft"]).optional().default("public"),
 
-    // ── Canvas Kit v2 (Path C) ─────────────────────────────────────────────
-    // Opt-in: if `canvas` is present, Renowide will fetch SDUI JSON from the
-    // dev's server on hire-flow and post-hire surfaces and render it inside
-    // Renowide's chrome. If absent, the agent stays pure Persona A link-out.
+    // ── EU AI Act compliance fields (Gap 6) ───────────────────────────────
+    // Optional for minimal/limited risk agents; required before going public
+    // for high-risk agents (finance credit-scoring, healthcare clinical,
+    // recruitment hiring decisions, construction safety-critical infra).
     //
-    // Shape mirrors `ManifestCanvasBlock` in `backend/app/schemas/canvas.py`
-    // via the canonical `@renowide/types` package so the CLI, the backend,
-    // and `@renowide/ui-kit` never drift.
+    // These fields feed:
+    //   - The Art. 4 AI Literacy Pack (auto-generated at every hire)
+    //   - The Art. 13 Deployer Disclosure (auto-generated at hire time)
+    //   - The Art. 11 Technical Documentation (POST generate-eu-tech-docs)
+    //   - The precision risk classifier (narrows finance/healthcare/etc.)
+    //
+    // EU AI Act Art. 11 + 13 required fields for high-risk agents:
+    intended_purpose: z
+      .string()
+      .max(2000)
+      .optional()
+      .describe(
+        "What this agent is designed to do and in what context. " +
+        "Required for Art. 11 technical documentation (high-risk agents). " +
+        "Example: 'Assess creditworthiness of individual applicants for personal loans under €50,000'"
+      ),
+    known_limitations: z
+      .array(z.string().max(300))
+      .max(20)
+      .optional()
+      .describe(
+        "List of declared limitations staff must be aware of. " +
+        "Required for Art. 13 deployer transparency (high-risk agents). " +
+        "Example: ['Not validated on applicants outside EU-27', 'Requires 24+ months of credit history']"
+      ),
+    foreseeable_misuse: z
+      .array(z.string().max(300))
+      .max(10)
+      .optional()
+      .describe(
+        "Scenarios where this agent should NOT be used, or special care is required. " +
+        "Required for Art. 13 deployer transparency."
+      ),
+    // Binary intent flags — the most reliable EU AI Act risk signal.
+    // A 'yes' to any of these triggers the matching Annex III high-risk category.
+    // Without explicit flags, the risk classifier falls back to keyword matching
+    // against intended_purpose + description.
+    makes_credit_decisions: z
+      .boolean()
+      .optional()
+      .describe(
+        "Set to true if this agent assesses creditworthiness or scores credit. " +
+        "Triggers Annex III §5(b) HIGH RISK. Required for accuracy."
+      ),
+    makes_hiring_decisions: z
+      .boolean()
+      .optional()
+      .describe(
+        "Set to true if this agent screens job candidates or informs hiring decisions. " +
+        "Triggers Annex III §4 HIGH RISK."
+      ),
+    makes_clinical_decisions: z
+      .boolean()
+      .optional()
+      .describe(
+        "Set to true if this agent informs clinical or diagnostic decisions. " +
+        "Triggers Annex III §5(a) HIGH RISK."
+      ),
+    processes_biometrics: z
+      .boolean()
+      .optional()
+      .describe(
+        "Set to true if this agent processes biometric data for identification. " +
+        "Triggers Annex III §1 HIGH RISK."
+      ),
+    is_safety_critical_infra: z
+      .boolean()
+      .optional()
+      .describe(
+        "Set to true if this agent acts as a safety component of critical infrastructure " +
+        "(gas, electricity, water, road traffic, digital infra). " +
+        "Triggers Annex III §2 HIGH RISK."
+      ),
+    // AI models used — feeds GPAI identification (Art. 51/53)
+    ai_models_used: z
+      .array(z.string().max(100))
+      .max(10)
+      .optional()
+      .describe(
+        "AI models this agent uses. Used to identify GPAI models (Art. 51/53). " +
+        "Example: ['claude-3-5-sonnet', 'gpt-4o-mini']"
+      ),
+    eu_art4_literacy_notes: z
+      .string()
+      .max(1000)
+      .optional()
+      .describe(
+        "Additional staff literacy notes specific to this agent. " +
+        "Included in the Art. 4 AI Literacy Pack generated at every hire."
+      ),
+
+    // ── Canvas Kit v2 (Path C) ─────────────────────────────────────────────
     canvas: ManifestCanvasBlockSchema.optional(),
   })
   // Cross-field validation: external protocol requires endpoint; mcp_client
@@ -433,16 +522,9 @@ interface PublishResponse {
   slug: string;
   dashboard_url: string;
   webhook_url: string;
-  // Present ONLY on first publish (secret rotation is a separate endpoint).
   handoff_secret?: string;
-  // Present when the server accepted the publish but flagged non-fatal
-  // warnings (e.g. "icon_url returned 404 — add one before going live").
   warnings?: string[];
-  // `created` on first publish, `updated` on subsequent ones.
   action: "created" | "updated";
-  // Canvas Kit v2 — populated only if `canvas` was present in renowide.json
-  // AND the backend accepted it. `canvas_enabled` on the AgentProfile flips
-  // to true once all three URLs below resolve + sign correctly.
   canvas?: {
     enabled: boolean;
     ui_kit_version: string;
@@ -450,6 +532,15 @@ interface PublishResponse {
     post_hire_canvas_url?: string;
     action_webhook_url: string;
     custom_embed_allowed_origins: string[];
+  };
+  // Gap 5: EU AI Act compliance summary returned at deploy time
+  eu_compliance?: {
+    risk_level: "prohibited" | "high" | "limited" | "minimal";
+    risk_reasons: string[];
+    obligations: string[];
+    platform_provides: string[];
+    c2pa_required: boolean;
+    transparency_url: string;
   };
 }
 
@@ -648,6 +739,63 @@ export async function cmdDeploy(opts: {
         `    After 30 days it reverts to the standard 15% commission.`,
       ),
     );
+  }
+
+  // ── Gap 5: Guild-adaptive EU AI Act compliance summary ──────────────────
+  // Always shown — the article numbers vary by guild and risk level.
+  // This is what makes compliance visible at the moment of deploy, not hidden
+  // in a dashboard nobody checks.
+  if (resp.eu_compliance) {
+    const eu = resp.eu_compliance;
+    const riskBadge = {
+      prohibited: pc.red("PROHIBITED — listing blocked"),
+      high:       pc.yellow("HIGH RISK (Annex III)"),
+      limited:    pc.cyan("LIMITED RISK (Art. 50)"),
+      minimal:    pc.green("MINIMAL RISK"),
+    }[eu.risk_level] ?? eu.risk_level;
+
+    console.log("");
+    console.log(`  EU AI Act:    ${riskBadge}`);
+
+    if (eu.risk_reasons.length > 0 && eu.risk_level !== "minimal") {
+      for (const r of eu.risk_reasons) {
+        console.log(pc.gray(`    Basis: ${r}`));
+      }
+    }
+
+    // What Renowide handles (always reassuring to see)
+    console.log(pc.gray("  Platform provides automatically:"));
+    for (const p of eu.platform_provides.slice(0, 3)) {
+      // Show first 3 most important; truncate for readability
+      console.log(pc.gray(`    ✓ ${p.substring(0, 90)}`));
+    }
+
+    // What the creator must do (only show if there's something actionable)
+    const creatorTodos = eu.obligations.filter(o =>
+      !o.startsWith("Art. 4") && !o.startsWith("No mandatory")
+    );
+    if (creatorTodos.length > 0) {
+      console.log(pc.yellow("  Your remaining obligations:"));
+      for (const o of creatorTodos.slice(0, 3)) {
+        console.log(pc.yellow(`    ! ${o.substring(0, 100)}`));
+      }
+      if (eu.risk_level === "high") {
+        console.log(pc.gray(`    Generate technical docs: renowide compliance generate-docs`));
+      }
+    }
+
+    if (eu.c2pa_required) {
+      console.log(pc.yellow("  ⚠ Art. 50(4): C2PA watermarking required for generated content."));
+      console.log(pc.gray("    See: https://github.com/Renowide/renowide-cli/docs/c2pa.md"));
+    }
+
+    console.log(pc.gray(`  Transparency: ${eu.transparency_url}`));
+  } else {
+    // Fallback if backend didn't return eu_compliance yet
+    console.log("");
+    console.log(pc.gray(
+      `  EU AI Act: run \`renowide compliance check\` for your risk classification.`
+    ));
   }
 
   if (resp.warnings && resp.warnings.length > 0) {

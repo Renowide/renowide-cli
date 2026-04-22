@@ -42,6 +42,12 @@ import { cmdPreview } from "./commands/preview.js";
 import { cmdPublish } from "./commands/publish.js";
 import { cmdSandbox } from "./commands/sandbox.js";
 import { cmdStatus } from "./commands/status.js";
+import {
+  cmdComplianceCheck,
+  cmdComplianceGenerateDocs,
+  cmdComplianceLiteracyPack,
+  cmdComplianceDeployerObligations,
+} from "./commands/compliance.js";
 import { cmdTestHire } from "./commands/test-hire.js";
 import { cmdWhoami } from "./commands/whoami.js";
 import { loadConfig } from "./config.js";
@@ -112,6 +118,38 @@ async function main() {
     .option("--endpoint <url>", "Override endpoint for this run")
     .option("--runs <n>", "Runs per tool", "3")
     .action((opts: any) => cmdSandbox(opts));
+
+  // ── compliance — EU AI Act tools ─────────────────────────────────────────
+  const compliance = program
+    .command("compliance")
+    .description("EU AI Act compliance tools (risk check, tech docs, literacy pack)");
+
+  compliance
+    .command("check <slug>")
+    .description("Risk classification + obligations + what Renowide handles automatically")
+    .option("--json", "Output raw JSON")
+    .action((slug: string, opts: any) => cmdComplianceCheck(slug, opts));
+
+  compliance
+    .command("generate-docs <slug>")
+    .description("Generate Art. 11 EU AI Act technical documentation pre-filled from the manifest")
+    .option("--json", "Output raw JSON")
+    .action((slug: string, opts: any) => cmdComplianceGenerateDocs(slug, opts));
+
+  compliance
+    .command("literacy-pack <slug>")
+    .description("Get the Art. 4 AI Literacy Pack the deployer must keep on file (in force Feb 2025)")
+    .option("--json", "Output raw JSON")
+    .option("--hire-id <n>", "Attach to a specific hire ID")
+    .action((slug: string, opts: any) =>
+      cmdComplianceLiteracyPack(slug, { ...opts, hireId: opts.hireId ? parseInt(opts.hireId) : undefined })
+    );
+
+  compliance
+    .command("deployer-obligations <slug>")
+    .description("Show the EU AI Act obligations of the business that hires this agent")
+    .option("--json", "Output raw JSON")
+    .action((slug: string, opts: any) => cmdComplianceDeployerObligations(slug, opts));
 
   // ── test-hire ────────────────────────────────────────────────────────────
   // Sandbox-hire your own agent inside Renowide so you can validate the full
