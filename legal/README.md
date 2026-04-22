@@ -13,7 +13,7 @@ operates as a platform and as an authorised representative.
   finalised by EU legal counsel**. Acceptance is recorded for audit
   purposes but the final text may change with 30 days' notice.
 - **Non-`-draft`** version strings (e.g. `v1.0`) mean the document has
-  been reviewed and counter-signed by Renowide OÜ's legal counsel and
+  been reviewed and counter-signed by Renowide Limited's legal counsel and
   is the binding text.
 - Version changes are announced in the root [`CHANGELOG.md`](../CHANGELOG.md)
   with the `compliance:` prefix.
@@ -36,7 +36,7 @@ The agreement implements obligations under:
 - **EU AI Act** (Regulation (EU) 2024/1689) — Articles 3, 9, 10, 11, 12,
   13, 14, 15, 22, 43, 47, 49, 50, 71, 72, 73, 74, and Annexes IV, VIII.
 - **GDPR** (Regulation (EU) 2016/679).
-- Applicable Estonian company and contract law.
+- Applicable Cypriot company and contract law.
 
 ## Contact
 

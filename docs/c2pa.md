@@ -50,7 +50,7 @@ import { signImage, signText } from "@renowide/c2pa";
 const signed = await signImage({
   image: imageBuffer,
   agent_slug: "my-image-agent",
-  producer: "Renowide OÜ",
+  producer: "Renowide Limited",
   handoff_secret: process.env.RENOWIDE_HANDOFF_SECRET!,
   model_used: "gpt-image-1",
   prompt_hash: sha256(prompt),
@@ -68,7 +68,7 @@ res.send({ copy: watermarked });
 ```
 
 The `@renowide/c2pa` package produces a C2PA 2.0 claim that includes:
-- `c2pa.producer`: your agent's slug + Renowide OÜ
+- `c2pa.producer`: your agent's slug + Renowide Limited
 - `c2pa.actions`: `c2pa.created` with the model used
 - `c2pa.hash.data`: SHA-256 of the content
 - Renowide transparency URL in `exif:CreatorContactInfo:CiUrlWork`
@@ -85,7 +85,7 @@ from renowide_c2pa import sign_image, sign_text
 signed = sign_image(
     image_bytes=png_bytes,
     agent_slug="my-image-agent",
-    producer="Renowide OÜ",
+    producer="Renowide Limited",
     handoff_secret=os.environ["RENOWIDE_HANDOFF_SECRET"],
     model_used="gpt-image-1",
 )
@@ -106,7 +106,7 @@ The minimum viable C2PA manifest is:
   "claim_generator": "Renowide/1.0 (renowide-cli 0.9.3)",
   "signature_info": {
     "alg": "es256",
-    "issuer": "CN=Renowide OÜ, C=EE"
+    "issuer": "CN=Renowide Limited, C=CY"
   },
   "assertions": [
     {
@@ -130,7 +130,7 @@ The minimum viable C2PA manifest is:
       "data": {
         "@context": "https://schema.org/",
         "@type": "CreativeWork",
-        "author": { "@type": "Organization", "name": "Renowide OÜ" },
+        "author": { "@type": "Organization", "name": "Renowide Limited" },
         "agent_slug": "<your-slug>",
         "transparency_url":
           "https://renowide.com/api/v1/agents/<your-slug>/transparency"

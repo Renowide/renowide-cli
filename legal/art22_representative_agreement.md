@@ -11,11 +11,12 @@ harmonised rules on artificial intelligence (the "EU AI Act").
 - **Provider** — the natural or legal person identified in §2 below
   who develops and/or places an AI system on the market in the European
   Union under the Renowide marketplace.
-- **Authorised Representative** — **Renowide OÜ**, a private limited
-  company registered under the laws of Estonia, company registration
-  number [REG_NUMBER], registered office at [ADDRESS_TALLINN], Estonia,
-  represented by its board member [NAME] (hereinafter "Renowide" or the
-  "Representative").
+- **Authorised Representative** — **Renowide Limited**, a private limited
+  company incorporated under the Companies Law Cap. 113 of the Republic
+  of Cyprus, company registration number **[CY_REG_NUMBER]**,
+  registered office at **[REGISTERED_OFFICE_CYPRUS]**, Republic of Cyprus,
+  represented by its director **[DIRECTOR_NAME]**
+  (hereinafter "Renowide" or the "Representative").
 
 ---
 
@@ -23,7 +24,7 @@ harmonised rules on artificial intelligence (the "EU AI Act").
 
 The Provider, being established outside the European Union, or being an
 EU-established Provider who elects to delegate certain representation
-duties, hereby appoints Renowide OÜ by **written mandate** (this
+duties, hereby appoints Renowide Limited by **written mandate** (this
 Agreement) as its Authorised Representative for the purposes of
 Article 22 of the EU AI Act.
 
@@ -130,17 +131,22 @@ The Provider undertakes to:
    - manufacture, train, or modify the AI system;
    - guarantee the accuracy or safety of the system's outputs;
    - perform the conformity assessment on the Provider's behalf.
-3. The Representative's liability to the Provider under this Agreement
-   is capped at the greater of:
+3. The Representative's aggregate liability to the Provider under this
+   Agreement, whether in contract, tort (including negligence), or
+   otherwise, is capped at the greater of:
    - €1,000, or
-   - the total Renowide platform fees received from the Provider under
-     Article 22 representation services during the twelve (12) months
-     preceding the event giving rise to liability.
+   - the total Renowide platform fees received from the Provider in
+     respect of Article 22 representation services during the twelve
+     (12) months immediately preceding the event giving rise to
+     liability.
+   This cap represents a genuine pre-estimate of the Representative's
+   risk given its strictly representational role, and the parties
+   confirm that it is fair and reasonable in the circumstances.
 4. Nothing in this clause limits a party's liability for:
    - death or personal injury caused by negligence;
    - fraud or fraudulent misrepresentation;
-   - any liability that cannot be excluded under applicable mandatory
-     EU or Member State law.
+   - any liability that cannot be limited or excluded under applicable
+     mandatory EU or Cypriot law.
 
 ## 7. Fees and consideration
 
@@ -168,8 +174,9 @@ through Renowide's `POST /api/v1/creator/agents/:slug/eu-incident`
 endpoint, the Representative shall:
 
 1. Log the incident in the `eu_ai_act_incidents` audit record;
-2. Notify the competent national market surveillance authority within
-   the regulatory timeframe (up to 15 days; sooner for serious
+2. Notify the competent national market surveillance authority
+   designated by the Republic of Cyprus under Article 70 EU AI Act
+   within the regulatory timeframe (up to 15 days; sooner for serious
    incidents under Article 73(4));
 3. Cooperate with any investigation;
 4. Inform the Provider of all authority communications within 2
@@ -193,6 +200,10 @@ of personal data. Each party shall comply with the General Data
 Protection Regulation (Regulation (EU) 2016/679) in relation to any
 personal data processed in connection with this Agreement.
 
+Data subjects may exercise their rights under GDPR by contacting the
+Cyprus Data Protection Commissioner (`commissioner@dataprotection.gov.cy`)
+or Renowide at `privacy@renowide.com`.
+
 Where the Representative processes personal data on behalf of the
 Provider, the standard Renowide Data Processing Addendum applies.
 
@@ -206,8 +217,10 @@ Provider, the standard Renowide Data Processing Addendum applies.
    notice if the other party:
    - commits a material breach that is not cured within 30 days of
      written notice;
-   - becomes subject to insolvency, administration, or analogous
-     proceedings;
+   - becomes subject to insolvency, winding-up, provisional
+     liquidation, or analogous proceedings under Companies Law Cap. 113
+     of Cyprus, Law 34(I)/2015 on Insolvency, or any equivalent
+     insolvency law applicable to that party;
    - is placed on a sanctions list referenced in Renowide's Creator
      Payout Terms.
 4. On termination, the Representative shall:
@@ -218,12 +231,20 @@ Provider, the standard Renowide Data Processing Addendum applies.
 
 ## 12. Governing law and jurisdiction
 
-This Agreement is governed by the laws of the Republic of Estonia,
-without regard to conflict-of-laws principles. The courts of Harju
-County, Tallinn, Estonia shall have exclusive jurisdiction over any
-dispute arising out of or in connection with this Agreement, subject
-to any non-waivable jurisdictional rules in favour of consumers under
+This Agreement is governed by the laws of the Republic of Cyprus,
+including Companies Law Cap. 113 and Contract Law Cap. 149, without
+regard to conflict-of-laws principles.
+
+The courts of the Nicosia District Court, Republic of Cyprus shall
+have exclusive jurisdiction over any dispute arising out of or in
+connection with this Agreement, subject to any non-waivable
+jurisdictional rules in favour of consumers under applicable EU or
 Member State law.
+
+*Note for counsel: Cyprus contract law follows common law principles
+derived from the English common law tradition. The liability cap in §6
+is to be read in accordance with the test in Dunlop Pneumatic Tyre Co
+v New Garage & Motor Co [1915] AC 79 as applied under Cypriot law.*
 
 ## 13. Entire agreement
 
@@ -245,8 +266,9 @@ declines the new version, either party may terminate under §11(2).
 ## 15. Severability
 
 If any provision of this Agreement is held to be invalid or
-unenforceable, that provision shall be severed and the remaining
-provisions shall continue in full force and effect.
+unenforceable by a court of competent jurisdiction, that provision
+shall be severed and the remaining provisions shall continue in full
+force and effect.
 
 ## 16. Notices
 
@@ -268,7 +290,12 @@ the English version prevails.
 Electronic acceptance through the Renowide creator dashboard
 (`POST /api/v1/creator/art22-mandate/accept`) constitutes valid
 written form for the purposes of Article 22(1) EU AI Act, which
-requires a **written mandate**. Acceptance is evidenced by:
+requires a **written mandate**. This is consistent with eIDAS
+Regulation (EU) 910/2014 Article 25(1) (electronic signatures shall
+not be denied legal effect solely on the grounds that they are in
+electronic form) and Cyprus Electronic Transactions Law N.156(I)/2004.
+
+Acceptance is evidenced by:
 
 - the Provider's authenticated session at acceptance time,
 - the terms version hash,
@@ -290,12 +317,25 @@ all of which are retained in the `art22_mandates` audit table.
   13, 14, 15, 22, 43, 47, 49, 50, 71, 72, 73, 74, and Annexes IV,
   VIII.
 - Regulation (EU) 2016/679 (GDPR).
-- Applicable Estonian company and contract law.
+- Regulation (EU) 910/2014 (eIDAS).
+- Companies Law Cap. 113 of the Republic of Cyprus.
+- Contract Law Cap. 149 of the Republic of Cyprus.
+- Cyprus Electronic Transactions Law N.156(I)/2004.
+- Insolvency Law 34(I)/2015 of the Republic of Cyprus.
 
 ## 21. Status of this Draft
 
 **THIS DOCUMENT IS A TEMPLATE DRAFTED BY RENOWIDE FOR REVIEW BY EU AI
 ACT LEGAL COUNSEL. IT IS NOT YET IN FORCE.**
+
+The following placeholders must be completed before this Agreement is
+finalised:
+
+| Placeholder | Required information |
+|---|---|
+| `[CY_REG_NUMBER]` | Cyprus company registration number (format: HE followed by digits) |
+| `[REGISTERED_OFFICE_CYPRUS]` | Registered office address exactly as it appears on the Certificate of Incorporation |
+| `[DIRECTOR_NAME]` | Full legal name of the authorised signatory director |
 
 Until the version string above changes from `v2026-04-22-draft` to a
 non-`-draft` identifier, the Representative does **not** claim to act
@@ -314,6 +354,15 @@ Act on a final, counsel-approved basis. During the draft period:
   to decline the new terms.
 
 This clause will be removed in the final version.
+
+**Counsel's checklist before moving to v1.0:**
+- [ ] Confirm `[CY_REG_NUMBER]`, `[REGISTERED_OFFICE_CYPRUS]`, `[DIRECTOR_NAME]`
+- [ ] Confirm Cyprus national competent authority designation under Art. 70 EU AI Act
+- [ ] Review §6 liability cap in light of Cypriot case law on pre-estimates of loss
+- [ ] Review §11.3 insolvency reference covers all applicable Cyprus/EU proceedings
+- [ ] Confirm eIDAS electronic acceptance is sufficient for Cyprus requirements
+- [ ] Confirm VAT treatment on the Article 22 retainer (§7)
+- [ ] Advise on any Cyprus-specific professional indemnity insurance requirements
 
 ---
 

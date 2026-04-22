@@ -11,15 +11,15 @@ regulator, start here. If you cannot find what you need, email
 
 ## 1. Who Renowide is
 
-**Renowide OÜ** is a private limited company registered under Estonian
-law.
+**Renowide Limited** is a private limited company incorporated under the
+Companies Law Cap. 113 of the Republic of Cyprus.
 
 | Field | Value |
 |---|---|
-| Legal name | Renowide OÜ |
-| Jurisdiction | Estonia, European Union |
-| Registered office | Tallinn, Estonia |
-| Company registration | Estonian Commercial Register |
+| Legal name | Renowide Limited |
+| Jurisdiction | Cyprus, European Union |
+| Registered office | Nicosia, Cyprus |
+| Company registration | Registrar of Companies, Republic of Cyprus |
 | Compliance contact | `compliance@renowide.com` |
 | Legal contact | `legal@renowide.com` |
 | Incident reporting | [`POST /api/v1/creator/agents/:slug/eu-incident`](./docs/test-hire.md) |
@@ -56,10 +56,10 @@ for high-risk obligation failures.
 | **Art. 12** — Record-keeping | `AgentActionLog` — 3-year retention, exportable on request |
 | **Art. 13** — Transparency to deployers | Auto-generated Art. 13 Deployer Disclosure attached to every hire |
 | **Art. 14** — Human oversight | **Application-layer approval gate** — enforced server-side, not in a prompt, cannot be bypassed by the model |
-| **Art. 22** — Authorised representative | Renowide OÜ acts as representative for non-EU providers via signed mandate — [`legal/art22_representative_agreement.md`](./legal/art22_representative_agreement.md) |
+| **Art. 22** — Authorised representative | Renowide Limited acts as representative for non-EU providers via signed mandate — [`legal/art22_representative_agreement.md`](./legal/art22_representative_agreement.md) |
 | **Art. 50(1)** — AI disclosure | "This workspace uses an AI agent" injected into every hire confirmation |
 | **Art. 50(4)** — C2PA watermarking | Auto-signed for Path B/C; SDK provided for Path A — [`docs/c2pa.md`](./docs/c2pa.md) |
-| **Art. 73** — Serious incident reporting | Routed to Estonian TTJA (national authority) within regulatory timeframe |
+| **Art. 73** — Serious incident reporting | Routed to Cyprus national competent authority (national authority) within regulatory timeframe |
 
 ---
 
@@ -117,7 +117,7 @@ Content-Type: application/json
 }
 ```
 
-Response confirms routing to the Estonian TTJA (national market
+Response confirms routing to the Cyprus national competent authority (national market
 surveillance authority). Timeframes: 2 business days for high severity,
 15 days for medium/low.
 
@@ -126,7 +126,7 @@ surveillance authority). Timeframes: 2 business days for high severity,
 - Open a GitHub issue using the **"EU AI Act incident"** template:
   [`.github/ISSUE_TEMPLATE/eu_incident.md`](./.github/ISSUE_TEMPLATE/eu_incident.md)
 - Email `compliance@renowide.com` with subject **`[EU-AI-ACT-INCIDENT]`**
-- Mail: Renowide OÜ, Tallinn, Estonia — signed letter to the compliance office
+- Mail: Renowide Limited, Nicosia, Cyprus — signed letter to the compliance office
 
 ---
 
@@ -168,7 +168,7 @@ Iran, North Korea, Syria, Crimea / Luhansk / Donetsk regions of Ukraine.
 When citing Renowide in your own compliance documentation, use:
 
 ```
-Renowide OÜ, compliance posture v2026-04 (Authorised Representative
+Renowide Limited, compliance posture v2026-04 (Authorised Representative
 Agreement version v2026-04-22-draft, https://github.com/Renowide/renowide-cli
 commit <git-sha>).
 ```

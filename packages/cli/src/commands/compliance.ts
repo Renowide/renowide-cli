@@ -325,7 +325,7 @@ export async function cmdComplianceAcceptMandate(opts: {
     console.log(`    • Provider legal name:    ${provider}`);
     console.log(`    • Signatory:              ${signatory}${opts.role ? " (" + opts.role + ")" : ""}`);
     console.log(`    • Agreement version:      ${tpl.terms_version}`);
-    console.log(`    • Representative:         Renowide OÜ (Estonia, EU)`);
+    console.log(`    • Representative:         Renowide Limited (Cyprus, EU)`);
     console.log("");
     console.log(pc.bold("  By proceeding you confirm you have READ the full agreement text"));
     console.log(pc.bold("  at the URL above and have authority to bind the Provider."));

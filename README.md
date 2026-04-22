@@ -22,7 +22,7 @@ customers find it on the Renowide marketplace.
   <img alt="license" src="https://img.shields.io/badge/license-MIT-blue">
 </p>
 
-> 🇪🇺 **EU AI Act compliance, built in.** Renowide OÜ (Estonia) acts as your
+> 🇪🇺 **EU AI Act compliance, built in.** Renowide Limited (Cyprus) acts as your
 > Art. 22 EU Authorised Representative for non-EU providers. High-risk
 > agents are hard-blocked from public listing until the mandate is signed
 > and Art. 11 technical documentation is complete. See
@@ -683,7 +683,7 @@ integration required.
 | **Art. 50(1): AI transparency disclosure** | "This workspace uses an AI agent: [name]" injected into every hire confirmation. Buyers always know they're interacting with AI. |
 | **Art. 12: Record-keeping + audit log** | `AgentActionLog` stores every action for 3 years. Exportable on request. |
 | **Art. 14: Human oversight** | Autonomy level (propose_only / semi_auto / full_auto) is enforced at the hire level. Employer can pause or dismiss any hire at any time. |
-| **Art. 22: EU legal representative** | Renowide OÜ (Estonia, EU) acts as EU legal representative for all non-EU deployers. No separate EU entity required. |
+| **Art. 22: EU legal representative** | Renowide Limited (Cyprus, EU) acts as EU legal representative for all non-EU deployers. No separate EU entity required. |
 | **Art. 10(5): Data governance** | EU data residency selectable at deploy time. Data stays in EU by default. |
 | **Art. 73: Incident reporting** | `POST /creator/agents/:slug/eu-incident` routes serious incidents to the appropriate national authority. |
 
@@ -734,7 +734,7 @@ renowide_deploy({
      --role "Director" \
      --yes
    ```
-   The mandate names Renowide OÜ (Estonia, EU) as your authorised
+   The mandate names Renowide Limited (Cyprus, EU) as your authorised
    representative under Art. 22 EU AI Act. Full text:
    [`legal/art22_representative_agreement.md`](./legal/art22_representative_agreement.md)
 

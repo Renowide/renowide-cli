@@ -54,9 +54,8 @@ Regulation (EU) 2024/1689** and has a different reporting channel:
   [EU AI Act incident GitHub issue template](./.github/ISSUE_TEMPLATE/eu_ai_act_incident.md)
 - By email: `compliance@renowide.com` with subject `[EU-AI-ACT-INCIDENT]`
 
-Renowide OÜ will route the incident to the Estonian Consumer Protection
-and Technical Regulatory Authority (TTJA) as the competent national
-market surveillance authority, within regulatory timeframes (2 business
-days for high severity, 15 days for medium/low).
+Renowide Limited will route the incident to the Cyprus national competent
+authority designated under Article 70 EU AI Act, within regulatory
+timeframes (2 business days for high severity, 15 days for medium/low).
 
 See [`COMPLIANCE.md`](./COMPLIANCE.md) for the full regulatory map.
