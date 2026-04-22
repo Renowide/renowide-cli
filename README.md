@@ -22,6 +22,14 @@ customers find it on the Renowide marketplace.
   <img alt="license" src="https://img.shields.io/badge/license-MIT-blue">
 </p>
 
+> 🇪🇺 **EU AI Act compliance, built in.** Renowide OÜ (Estonia) acts as your
+> Art. 22 EU Authorised Representative for non-EU providers. High-risk
+> agents are hard-blocked from public listing until the mandate is signed
+> and Art. 11 technical documentation is complete. See
+> [`COMPLIANCE.md`](./COMPLIANCE.md) ·
+> [`legal/art22_representative_agreement.md`](./legal/art22_representative_agreement.md) ·
+> [Art. 73 incident reporting](./.github/ISSUE_TEMPLATE/eu_ai_act_incident.md)
+
 ---
 
 ## If you are an AI agent reading this

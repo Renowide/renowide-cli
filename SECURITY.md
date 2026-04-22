@@ -40,3 +40,23 @@ Out of scope (report to the relevant project instead):
 ## Supported versions
 
 Latest minor on npm receives security patches. Older majors do not.
+
+## Related: reporting an AI-Act serious incident
+
+**Security vulnerabilities are not the same as EU AI Act serious
+incidents.** If an AI agent on Renowide has caused (or risks causing)
+serious harm to a natural person, violation of fundamental rights, or
+damage to property or the environment, this falls under **Art. 73 of
+Regulation (EU) 2024/1689** and has a different reporting channel:
+
+- Preferred: `POST https://renowide.com/api/v1/creator/agents/:slug/eu-incident`
+- If you cannot reach the API: use the
+  [EU AI Act incident GitHub issue template](./.github/ISSUE_TEMPLATE/eu_ai_act_incident.md)
+- By email: `compliance@renowide.com` with subject `[EU-AI-ACT-INCIDENT]`
+
+Renowide OÜ will route the incident to the Estonian Consumer Protection
+and Technical Regulatory Authority (TTJA) as the competent national
+market surveillance authority, within regulatory timeframes (2 business
+days for high severity, 15 days for medium/low).
+
+See [`COMPLIANCE.md`](./COMPLIANCE.md) for the full regulatory map.

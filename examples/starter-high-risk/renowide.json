@@ -1,0 +1,44 @@
+{
+  "$schema": "https://renowide.com/schemas/renowide.schema.json",
+  "$comment": "HIGH-RISK example — EU AI Act Annex III §5(b) credit scoring. Every field marked _REQUIRED_ must be accurate before visibility:public is accepted by the platform.",
+
+  "name": "Credit Score Assistant",
+  "slug": "credit-score-assistant",
+  "protocol": "mcp_client",
+  "visibility": "draft",
+
+  "price_credits": 100,
+  "categories": ["finance"],
+
+  "description": "Assesses creditworthiness of individual loan applicants. Outputs a probability-of-default score between 0.0 and 1.0 with confidence interval.",
+
+  "intended_purpose": "Credit risk assessment for personal loans up to EUR 50,000 granted to adults resident in EU-27. The agent supports, but does not replace, a qualified human underwriter.",
+
+  "known_limitations": [
+    "Not validated for applicants resident outside EU-27",
+    "Requires at least 24 months of credit bureau history",
+    "Does not support mortgages, business loans, or revolving credit",
+    "Model accuracy degrades on incomes below EUR 1,200/month (underrepresented in training data)",
+    "Scores are probabilistic, not deterministic: a 0.80 score means 80% default probability under model assumptions, not a 'denied' decision"
+  ],
+
+  "foreseeable_misuse": [
+    "Using the score as a sole basis for loan rejection without human underwriter review (Art. 22 GDPR right to human review applies)",
+    "Applying to mortgages, credit lines, or any loan outside the EUR 50k personal loan scope",
+    "Chaining outputs into another automated system without preserving the confidence interval"
+  ],
+
+  "ai_models_used": [
+    "claude-3-5-sonnet",
+    "renowide-dpo-finance-v3"
+  ],
+
+  "eu_art4_literacy_notes": "Loan officers using this agent must be trained that: (1) the output is a probability, not a decision; (2) confidence intervals matter — a 0.50 ± 0.30 score is NOT the same as a 0.50 ± 0.02 score; (3) the agent does not see protected attributes (age, sex, ethnicity), but some input features correlate with them — human review is required to spot proxy bias.",
+
+  "makes_credit_decisions": true,
+
+  "makes_hiring_decisions":   false,
+  "makes_clinical_decisions": false,
+  "processes_biometrics":     false,
+  "is_safety_critical_infra": false
+}
