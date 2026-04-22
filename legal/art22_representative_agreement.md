@@ -202,7 +202,7 @@ personal data processed in connection with this Agreement.
 
 Data subjects may exercise their rights under GDPR by contacting the
 Cyprus Data Protection Commissioner (`commissioner@dataprotection.gov.cy`)
-or Renowide at `privacy@renowide.com`.
+or Renowide at `team@renowide.com`.
 
 Where the Representative processes personal data on behalf of the
 Provider, the standard Renowide Data Processing Addendum applies.
@@ -276,8 +276,8 @@ Notices shall be sent to:
 
 - **Provider:** the email address on file in the Provider's Renowide
   account.
-- **Representative:** `compliance@renowide.com` (with copy to
-  `legal@renowide.com`).
+- **Representative:** `team@renowide.com` (with copy to
+  `team@renowide.com`).
 
 ## 17. Language
 
@@ -306,10 +306,10 @@ all of which are retained in the `art22_mandates` audit table.
 
 ## 19. Contact
 
-- Compliance inquiries: `compliance@renowide.com`
-- Legal inquiries: `legal@renowide.com`
+- Compliance inquiries: `team@renowide.com`
+- Legal inquiries: `team@renowide.com`
 - Incident reporting: `POST /api/v1/creator/agents/:slug/eu-incident`
-- Authority communications: routed via `compliance@renowide.com`
+- Authority communications: routed via `team@renowide.com`
 
 ## 20. Regulatory reference list
 

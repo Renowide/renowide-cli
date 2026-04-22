@@ -52,7 +52,7 @@ Regulation (EU) 2024/1689** and has a different reporting channel:
 - Preferred: `POST https://renowide.com/api/v1/creator/agents/:slug/eu-incident`
 - If you cannot reach the API: use the
   [EU AI Act incident GitHub issue template](./.github/ISSUE_TEMPLATE/eu_ai_act_incident.md)
-- By email: `compliance@renowide.com` with subject `[EU-AI-ACT-INCIDENT]`
+- By email: `team@renowide.com` with subject `[EU-AI-ACT-INCIDENT]`
 
 Renowide Limited will route the incident to the Cyprus national competent
 authority designated under Article 70 EU AI Act, within regulatory

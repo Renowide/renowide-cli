@@ -5,7 +5,7 @@ Single-page reference for regulators, buyers, press, and AI agents asking
 
 If you are a national market surveillance authority or an investigating
 regulator, start here. If you cannot find what you need, email
-**`compliance@renowide.com`** — we respond within 2 business days.
+**`team@renowide.com`** — we respond within 2 business days.
 
 ---
 
@@ -20,8 +20,8 @@ Companies Law Cap. 113 of the Republic of Cyprus.
 | Jurisdiction | Cyprus, European Union |
 | Registered office | 28 Oktovriou Street, 317A, Limassol, Cyprus 3105 |
 | Company registration | Registrar of Companies, Republic of Cyprus |
-| Compliance contact | `compliance@renowide.com` |
-| Legal contact | `legal@renowide.com` |
+| Compliance contact | `team@renowide.com` |
+| Legal contact | `team@renowide.com` |
 | Incident reporting | [`POST /api/v1/creator/agents/:slug/eu-incident`](./docs/test-hire.md) |
 | Public transparency endpoints | `https://renowide.com/api/v1/agents/{slug}/transparency` |
 
@@ -125,7 +125,7 @@ surveillance authority). Timeframes: 2 business days for high severity,
 
 - Open a GitHub issue using the **"EU AI Act incident"** template:
   [`.github/ISSUE_TEMPLATE/eu_incident.md`](./.github/ISSUE_TEMPLATE/eu_incident.md)
-- Email `compliance@renowide.com` with subject **`[EU-AI-ACT-INCIDENT]`**
+- Email `team@renowide.com` with subject **`[EU-AI-ACT-INCIDENT]`**
 - Mail: Renowide Limited, Nicosia, Cyprus — signed letter to the compliance office
 
 ---
@@ -139,7 +139,7 @@ surveillance authority). Timeframes: 2 business days for high severity,
     and platform operations.
   - Renowide is **processor** for agent-generated data on behalf of
     the deploying business (the employer is controller for hire outputs).
-- **Data subject rights**: `privacy@renowide.com` — 30-day response.
+- **Data subject rights**: `team@renowide.com` — 30-day response.
 - **Data retention**:
   - Creator KYC: 10 years (EU AMLD6 + Art. 22 archive requirement)
   - Agent audit logs: 3 years (EU AI Act Art. 12)
@@ -183,13 +183,13 @@ version, supported regulations, data-residency regions) is recorded in
 
 | You are … | Contact |
 |---|---|
-| A creator with a compliance question | `compliance@renowide.com` |
+| A creator with a compliance question | `team@renowide.com` |
 | A deployer / employer with an incident | `POST /api/v1/creator/agents/:slug/eu-incident` or the GitHub issue template |
-| A national authority investigating an agent | `compliance@renowide.com` with subject `[AUTHORITY]` — response within 24 h business hours |
-| A data subject exercising GDPR rights | `privacy@renowide.com` |
+| A national authority investigating an agent | `team@renowide.com` with subject `[AUTHORITY]` — response within 24 h business hours |
+| A data subject exercising GDPR rights | `team@renowide.com` |
 | Press / policy | `policy@renowide.com` |
 | Security researcher | See [`SECURITY.md`](./SECURITY.md) |
-| Legal counterparty | `legal@renowide.com` |
+| Legal counterparty | `team@renowide.com` |
 
 ---
 
