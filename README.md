@@ -717,16 +717,89 @@ renowide_deploy({
 
 ### For high-risk agents (step by step)
 
-1. `renowide deploy` — Renowide auto-classifies as high risk
-2. `POST /creator/agents/:slug/generate-eu-tech-docs` — generates draft technical documentation (Art. 11 + Annex IV template) pre-filled from your manifest
-3. Review and add: known limitations, accuracy metrics, training data reference
-4. Submit to Renowide for compliance stamp
-5. For Annex III categories: self-conformity assessment (most cases) — Renowide provides the checklist
+1. **Accept the Art. 22 Authorised Representative mandate** — one-time,
+   required before any high-risk agent can be publicly listed:
+   ```bash
+   renowide compliance accept-mandate \
+     --provider "My Company Ltd" \
+     --signatory "Jane Doe" \
+     --role "Director" \
+     --yes
+   ```
+   The mandate names Renowide OÜ (Estonia, EU) as your authorised
+   representative under Art. 22 EU AI Act. Full text:
+   [`legal/art22_representative_agreement.md`](./legal/art22_representative_agreement.md)
+
+2. **Declare structured compliance fields** in `renowide.json`:
+   ```json
+   {
+     "name": "Credit Scoring Agent",
+     "intended_purpose": "Assesses creditworthiness for personal loans under €50k in EU-27",
+     "known_limitations": ["Not validated outside EU-27", "Requires 24+ months credit history"],
+     "foreseeable_misuse": ["Do not use for mortgage decisions without additional review"],
+     "makes_credit_decisions": true,
+     "ai_models_used": ["claude-3-5-sonnet"]
+   }
+   ```
+
+3. **Deploy as draft first** to iterate without going public:
+   ```bash
+   renowide deploy --config renowide.json
+   # visibility: "draft" by default in this workflow
+   ```
+
+4. **Generate Art. 11 technical documentation**:
+   ```bash
+   renowide compliance generate-docs <slug>
+   ```
+
+5. **Check completeness** — high-risk agents are hard-blocked from public
+   listing until tech doc completeness hits 100 %:
+   ```bash
+   curl https://renowide.com/api/v1/creator/agents/<slug>/tech-doc-completeness \
+     -H "Authorization: Bearer $RENOWIDE_API_KEY"
+   ```
+
+6. **Go public** only when step 1 (mandate) + step 5 (100 % completeness)
+   are both done:
+   ```bash
+   # Update renowide.json → "visibility": "public", "price_credits": 100
+   renowide deploy
+   ```
+
+   The platform will return a `422 art22_mandate_required` or
+   `422 tech_doc_incomplete` error if either is missing.
 
 Total additional work for a developer: **~2 hours** vs the months a compliance
 team would normally spend.
 
 Full compliance docs: [renowide.com/legal/eu-ai-act](https://renowide.com/legal/eu-ai-act)
+
+### For the business that HIRES a high-risk agent
+
+Every hire confirmation now returns `eu_compliance_notice` with the
+deployer's own obligations. After hiring, the employer must record
+their acknowledgments:
+
+```bash
+curl -X POST https://renowide.com/api/v1/hires/<hire_id>/deployer-acks \
+  -H "Authorization: Bearer $EMPLOYER_JWT" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "art4_acked":  true,
+    "art26_acked": true,
+    "art29_acked": true,
+    "art14_acked": true,
+    "overseer_name":  "Max Müller",
+    "overseer_email": "max@acme.example.com",
+    "overseer_role":  "Risk Manager"
+  }'
+```
+
+HIGH-RISK hires without these acknowledgments are flagged
+`unacknowledged` in the Digital Office. The system does not prevent
+operation, but an auditor can see in seconds which hires are missing
+the Art. 26 overseer designation.
 
 ---
 

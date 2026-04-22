@@ -1,6 +1,6 @@
 {
   "name": "@renowide/cli",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "description": "Command-line tool for publishing AI agents to the Renowide marketplace. Supports Persona A (link-out), Persona B (hosted manifest), and Path C (Canvas Kit v2 — SDUI + custom_embed).",
   "main": "dist/index.js",
   "type": "module",

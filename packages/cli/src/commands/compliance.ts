@@ -213,6 +213,163 @@ export async function cmdComplianceLiteracyPack(
 }
 
 
+// ─── Art. 22 Authorised Representative mandate subcommands ──────────────────
+// These are the final step in the "Renowide as Art. 22 representative"
+// claim — without a signed mandate the platform cannot legally act as the
+// Provider's EU representative. The CLI flow reads the template, shows
+// the creator what they're signing, and POSTs acceptance.
+
+interface Art22Template {
+  terms_version: string;
+  is_draft: boolean;
+  template_url: string;
+  provider_legal_name: string;
+  signatory_name: string;
+  agent_slugs_covered: string[];
+  representative_entity: string;
+  required_fields: string[];
+  draft_warning?: string;
+}
+
+interface Art22Status {
+  has_mandate: boolean;
+  current_version: string;
+  accepted_version?: string;
+  is_up_to_date?: boolean;
+  provider_legal_name?: string;
+  signatory_name?: string;
+  accepted_at?: string;
+  is_draft?: boolean;
+  agent_slugs_covered?: string[];
+  renew_required?: boolean;
+  message?: string;
+}
+
+export async function cmdComplianceMandateStatus(opts: { json?: boolean }): Promise<void> {
+  const creds = requireCredentials();
+  const api = new RenowideAPI(creds.apiBase, creds.token);
+  const status = await api.get<Art22Status>("/api/v1/creator/art22-mandate/status");
+  if (opts.json) { console.log(JSON.stringify(status, null, 2)); return; }
+
+  console.log("");
+  console.log(pc.bold("EU AI Act Art. 22 — Authorised Representative Mandate"));
+  console.log("");
+  if (!status.has_mandate) {
+    console.log(pc.yellow("  Status: NOT ACCEPTED"));
+    console.log(pc.gray(`  Current version: ${status.current_version}`));
+    console.log("");
+    console.log("  You cannot publish HIGH-RISK agents until you accept the");
+    console.log("  Authorised Representative mandate. Run:");
+    console.log(pc.bold("    renowide compliance accept-mandate"));
+    console.log("");
+    return;
+  }
+  console.log(pc.green(`  Status: ACCEPTED${status.is_draft ? pc.yellow(" (DRAFT)") : ""}`));
+  console.log(`  Accepted version: ${status.accepted_version}`);
+  console.log(`  Current version:  ${status.current_version}`);
+  console.log(`  Up to date:       ${status.is_up_to_date ? pc.green("yes") : pc.yellow("no — renewal required")}`);
+  console.log(`  Provider:         ${status.provider_legal_name}`);
+  console.log(`  Signatory:        ${status.signatory_name}`);
+  console.log(`  Accepted at:      ${status.accepted_at}`);
+  if (status.agent_slugs_covered?.length) {
+    console.log(`  Agents covered:   ${status.agent_slugs_covered.join(", ")}`);
+  }
+  if (status.renew_required) {
+    console.log("");
+    console.log(pc.yellow("  Renewal required — run: renowide compliance accept-mandate"));
+  }
+  console.log("");
+}
+
+export async function cmdComplianceAcceptMandate(opts: {
+  json?: boolean;
+  yes?: boolean;
+  provider?: string;
+  signatory?: string;
+  role?: string;
+}): Promise<void> {
+  const creds = requireCredentials();
+  const api = new RenowideAPI(creds.apiBase, creds.token);
+
+  // Step 1 — fetch template + current version
+  const tpl = await api.get<Art22Template>("/api/v1/creator/art22-mandate/template");
+
+  console.log("");
+  console.log(pc.bold("EU AI Act Art. 22 — Authorised Representative Mandate"));
+  console.log(`  Version:       ${tpl.terms_version}${tpl.is_draft ? pc.yellow(" [DRAFT]") : ""}`);
+  console.log(`  Full text:     ${tpl.template_url}`);
+  console.log(`  Representative: ${tpl.representative_entity}`);
+  console.log(`  Agents covered: ${tpl.agent_slugs_covered.join(", ") || "(none yet — register at least one agent first)"}`);
+  console.log("");
+  if (tpl.draft_warning) {
+    console.log(pc.yellow("  ⚠ DRAFT NOTICE"));
+    for (const line of tpl.draft_warning.match(/.{1,78}(\s|$)/g) ?? [tpl.draft_warning]) {
+      console.log(pc.yellow(`    ${line.trim()}`));
+    }
+    console.log("");
+  }
+
+  const provider = opts.provider ?? tpl.provider_legal_name;
+  const signatory = opts.signatory ?? tpl.signatory_name;
+  if (!provider?.trim() || !signatory?.trim()) {
+    throw new Error(
+      "Provider legal name and signatory name are required. " +
+      "Pass --provider '<Legal Company Name>' --signatory '<Your Full Name>' " +
+      "or fill those fields in your Renowide creator profile first.",
+    );
+  }
+
+  // Step 2 — confirmation (skipped with --yes for CI)
+  if (!opts.yes) {
+    console.log(pc.bold("  You are about to electronically accept the following:"));
+    console.log(`    • Provider legal name:    ${provider}`);
+    console.log(`    • Signatory:              ${signatory}${opts.role ? " (" + opts.role + ")" : ""}`);
+    console.log(`    • Agreement version:      ${tpl.terms_version}`);
+    console.log(`    • Representative:         Renowide OÜ (Estonia, EU)`);
+    console.log("");
+    console.log(pc.bold("  By proceeding you confirm you have READ the full agreement text"));
+    console.log(pc.bold("  at the URL above and have authority to bind the Provider."));
+    console.log("");
+    console.log(pc.gray("  Re-run with --yes to skip this confirmation (CI mode)."));
+    console.log("");
+    console.log(pc.yellow("  Acceptance not recorded (interactive confirmation not supported in this build)."));
+    console.log(pc.gray("  Add --yes to the command to record acceptance."));
+    console.log("");
+    return;
+  }
+
+  // Step 3 — POST acceptance
+  const res = await api.post<{
+    accepted: boolean;
+    mandate_id: number;
+    terms_version: string;
+    is_draft: boolean;
+    acceptance_hash: string;
+    accepted_at: string;
+    agent_slugs_covered: string[];
+    next_step: string;
+  }>("/api/v1/creator/art22-mandate/accept", {
+    provider_legal_name: provider,
+    signatory_name:      signatory,
+    signatory_role:      opts.role,
+    terms_version:       tpl.terms_version,
+    i_have_read:         true,
+    i_accept:            true,
+    draft_acknowledged:  tpl.is_draft ? true : undefined,
+  });
+
+  if (opts.json) { console.log(JSON.stringify(res, null, 2)); return; }
+
+  console.log(pc.green(`✓ Mandate accepted — v${res.terms_version}${res.is_draft ? pc.yellow(" (DRAFT)") : ""}`));
+  console.log(`  Mandate ID:       ${res.mandate_id}`);
+  console.log(`  Acceptance hash:  ${res.acceptance_hash.substring(0, 24)}…`);
+  console.log(`  Accepted at:      ${res.accepted_at}`);
+  console.log(`  Agents covered:   ${res.agent_slugs_covered.join(", ") || "(none yet)"}`);
+  console.log("");
+  console.log(pc.gray(`  ${res.next_step}`));
+  console.log("");
+}
+
 export async function cmdComplianceDeployerObligations(
   slug: string,
   opts: { json?: boolean },

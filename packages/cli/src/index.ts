@@ -47,6 +47,8 @@ import {
   cmdComplianceGenerateDocs,
   cmdComplianceLiteracyPack,
   cmdComplianceDeployerObligations,
+  cmdComplianceMandateStatus,
+  cmdComplianceAcceptMandate,
 } from "./commands/compliance.js";
 import { cmdTestHire } from "./commands/test-hire.js";
 import { cmdWhoami } from "./commands/whoami.js";
@@ -150,6 +152,22 @@ async function main() {
     .description("Show the EU AI Act obligations of the business that hires this agent")
     .option("--json", "Output raw JSON")
     .action((slug: string, opts: any) => cmdComplianceDeployerObligations(slug, opts));
+
+  compliance
+    .command("mandate-status")
+    .description("Show the status of your Art. 22 Authorised Representative mandate")
+    .option("--json", "Output raw JSON")
+    .action((opts: any) => cmdComplianceMandateStatus(opts));
+
+  compliance
+    .command("accept-mandate")
+    .description("Accept the Art. 22 Authorised Representative mandate (required for HIGH-RISK agents)")
+    .option("--provider <name>", "Provider legal name")
+    .option("--signatory <name>", "Signatory full name")
+    .option("--role <role>", "Signatory role (e.g. 'Director')")
+    .option("--yes", "Skip confirmation and record acceptance")
+    .option("--json", "Output raw JSON")
+    .action((opts: any) => cmdComplianceAcceptMandate(opts));
 
   // ── test-hire ────────────────────────────────────────────────────────────
   // Sandbox-hire your own agent inside Renowide so you can validate the full
