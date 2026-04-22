@@ -149,6 +149,12 @@ async function main() {
     )
     .option("--config <path>", "Path to renowide.json", "renowide.json")
     .option("--dry-run", "Validate only — do not call the API")
+    .option(
+      "--via <partner-slug>",
+      "Credit an AI agent for this referral. The agent earns a Builder Partner badge; " +
+      "you get 0% commission for your first 30 days. " +
+      "Example: renowide deploy --via openclaw",
+    )
     .action((opts: any) => cmdDeploy(opts));
 
   // `hire` is a parent command with subcommands so we can grow into
