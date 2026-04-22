@@ -42,6 +42,7 @@ import { cmdPreview } from "./commands/preview.js";
 import { cmdPublish } from "./commands/publish.js";
 import { cmdSandbox } from "./commands/sandbox.js";
 import { cmdStatus } from "./commands/status.js";
+import { cmdTestHire } from "./commands/test-hire.js";
 import { cmdWhoami } from "./commands/whoami.js";
 import { loadConfig } from "./config.js";
 import { VERSION } from "./version.js";
@@ -111,6 +112,29 @@ async function main() {
     .option("--endpoint <url>", "Override endpoint for this run")
     .option("--runs <n>", "Runs per tool", "3")
     .action((opts: any) => cmdSandbox(opts));
+
+  // ── test-hire ────────────────────────────────────────────────────────────
+  // Sandbox-hire your own agent inside Renowide so you can validate the full
+  // user workflow (Digital Office UI, webhook delivery for Path A/C,
+  // poll/accept/complete loop for Path D) without publishing to the public
+  // marketplace and without charging any real credits. See docs/test-hire.md.
+  program
+    .command("test-hire <slug>")
+    .description(
+      "Create a sandbox hire of your own agent in your workspace — no credits charged",
+    )
+    .option(
+      "--mission <text>",
+      "Mission brief to show the agent (default: generic sandbox message)",
+    )
+    .option(
+      "--autonomy <level>",
+      "Autonomy level: propose_only | semi_auto | full_auto",
+      "propose_only",
+    )
+    .option("--end", "Dismiss the active sandbox hire for this slug instead of creating one")
+    .option("--reset", "Alias for --end")
+    .action((slug: string, opts: any) => cmdTestHire(slug, opts));
 
   program
     .command("status")

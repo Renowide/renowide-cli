@@ -57,8 +57,17 @@ export class RenowideAPI {
     return this.request<T>("GET", pathname, undefined, opts);
   }
 
-  private async request<T>(
-    method: "GET" | "POST",
+  async del<T>(pathname: string, opts?: RequestOptions): Promise<T> {
+    return this.request<T>("DELETE", pathname, undefined, opts);
+  }
+
+  /**
+   * Exposed as `public` so commands that need verbs beyond GET/POST/DELETE
+   * (or want to pass a typed body to a DELETE, etc.) can drive the client
+   * directly. Most callers should use the higher-level helpers above.
+   */
+  async request<T>(
+    method: "GET" | "POST" | "DELETE" | "PUT" | "PATCH",
     pathname: string,
     body?: unknown,
     opts?: RequestOptions,

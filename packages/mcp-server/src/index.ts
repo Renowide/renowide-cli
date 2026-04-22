@@ -126,7 +126,7 @@ class APIError extends Error {
 }
 
 async function apiRequest<T>(
-  method: "GET" | "POST",
+  method: "GET" | "POST" | "DELETE" | "PUT" | "PATCH",
   pathname: string,
   body?: unknown,
   token?: string,
@@ -488,11 +488,40 @@ const TOOLS = [
   {
     name: "renowide_test_sandbox",
     description:
-      "Simulate a hire against the user's deployed agent. No real money, no real customer. Returns a trace of the hire lifecycle (webhook sent, signature verified, /complete called). Useful for confirming the agent is correctly wired after deploy.",
+      "Probe the creator's deployed endpoint with a synthetic hire payload. Only valid for Path A/C (external protocol) — no Digital Office row, no poll event, just an HTTP round-trip to confirm the endpoint accepts the shape. For full user-workflow testing, prefer renowide_test_hire.",
     inputSchema: {
       type: "object",
       properties: {
         slug: { type: "string" },
+      },
+      required: ["slug"],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "renowide_test_hire",
+    description:
+      "Create a SANDBOX hire of the creator's own agent in their workspace (is_sandbox=true, hired_price=0 — no credits charged). Lands in Digital Office at /app, fires webhook for Path A/C, appears in renowide_poll_hires for Path D. Only one active sandbox hire per slug; pass {end:true} to dismiss and start fresh. This is the preferred way to test the full user workflow end-to-end before going public.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        slug: { type: "string", description: "Agent slug to sandbox-hire." },
+        mission_brief: {
+          type: "string",
+          description:
+            "Mission brief shown to the agent (defaults to a generic sandbox message).",
+        },
+        autonomy_level: {
+          type: "string",
+          enum: ["propose_only", "semi_auto", "full_auto"],
+          description:
+            "Autonomy level for the sandbox hire — same semantics as a real hire.",
+        },
+        end: {
+          type: "boolean",
+          description:
+            "If true, dismiss the currently active sandbox hire for this slug instead of creating one. Use when you want to re-run with a different mission.",
+        },
       },
       required: ["slug"],
       additionalProperties: false,
@@ -916,6 +945,29 @@ async function dispatch(name: string, args: Record<string, unknown>): Promise<un
         "POST",
         `/api/v1/creator/agents/${encodeURIComponent(slug)}/sandbox`,
         {},
+        token,
+      );
+    }
+
+    case "renowide_test_hire": {
+      const token = requireToken();
+      const { slug, mission_brief, autonomy_level, end } = args as {
+        slug: string;
+        mission_brief?: string;
+        autonomy_level?: string;
+        end?: boolean;
+      };
+      const path = `/api/v1/creator/agents/${encodeURIComponent(slug)}/test-hire`;
+      if (end) {
+        return apiRequest("DELETE", path, undefined, token);
+      }
+      return apiRequest(
+        "POST",
+        path,
+        {
+          mission_brief: mission_brief,
+          autonomy_level: autonomy_level,
+        },
         token,
       );
     }
