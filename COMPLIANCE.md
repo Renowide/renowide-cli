@@ -18,7 +18,7 @@ Companies Law Cap. 113 of the Republic of Cyprus.
 |---|---|
 | Legal name | Renowide Limited |
 | Jurisdiction | Cyprus, European Union |
-| Registered office | Nicosia, Cyprus |
+| Registered office | 28 Oktovriou Street, 317A, Limassol, Cyprus 3105 |
 | Company registration | Registrar of Companies, Republic of Cyprus |
 | Compliance contact | `compliance@renowide.com` |
 | Legal contact | `legal@renowide.com` |

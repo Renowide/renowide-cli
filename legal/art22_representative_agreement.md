@@ -13,9 +13,9 @@ harmonised rules on artificial intelligence (the "EU AI Act").
   Union under the Renowide marketplace.
 - **Authorised Representative** — **Renowide Limited**, a private limited
   company incorporated under the Companies Law Cap. 113 of the Republic
-  of Cyprus, company registration number **[CY_REG_NUMBER]**,
-  registered office at **[REGISTERED_OFFICE_CYPRUS]**, Republic of Cyprus,
-  represented by its director **[DIRECTOR_NAME]**
+  of Cyprus, company registration number **HE476724**,
+  registered office at **28 Oktovriou Street, 317A, Kanika Business Center, Block B, Office 101, Limassol, Cyprus 3105**, Republic of Cyprus,
+  represented by its director **Timur Valitov**
   (hereinafter "Renowide" or the "Representative").
 
 ---
@@ -328,14 +328,14 @@ all of which are retained in the `art22_mandates` audit table.
 **THIS DOCUMENT IS A TEMPLATE DRAFTED BY RENOWIDE FOR REVIEW BY EU AI
 ACT LEGAL COUNSEL. IT IS NOT YET IN FORCE.**
 
-The following placeholders must be completed before this Agreement is
-finalised:
+Representative company details (verify against Certificate of Incorporation
+before finalising):
 
-| Placeholder | Required information |
+| Field | Value |
 |---|---|
-| `[CY_REG_NUMBER]` | Cyprus company registration number (format: HE followed by digits) |
-| `[REGISTERED_OFFICE_CYPRUS]` | Registered office address exactly as it appears on the Certificate of Incorporation |
-| `[DIRECTOR_NAME]` | Full legal name of the authorised signatory director |
+| Company registration | HE476724 |
+| Registered office | 28 Oktovriou Street, 317A, Kanika Business Center, Block B, Office 101, Limassol, Cyprus 3105 |
+| Director (signatory) | Timur Valitov |
 
 Until the version string above changes from `v2026-04-22-draft` to a
 non-`-draft` identifier, the Representative does **not** claim to act
@@ -356,7 +356,7 @@ Act on a final, counsel-approved basis. During the draft period:
 This clause will be removed in the final version.
 
 **Counsel's checklist before moving to v1.0:**
-- [ ] Confirm `[CY_REG_NUMBER]`, `[REGISTERED_OFFICE_CYPRUS]`, `[DIRECTOR_NAME]`
+- [ ] Confirm `HE476724`, `28 Oktovriou Street, 317A, Kanika Business Center, Block B, Office 101, Limassol, Cyprus 3105`, `Timur Valitov`
 - [ ] Confirm Cyprus national competent authority designation under Art. 70 EU AI Act
 - [ ] Review §6 liability cap in light of Cypriot case law on pre-estimates of loss
 - [ ] Review §11.3 insolvency reference covers all applicable Cyprus/EU proceedings
