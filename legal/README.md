@@ -7,6 +7,19 @@ operates as a platform and as an authorised representative.
 |---|---|---|
 | [`art22_representative_agreement.md`](./art22_representative_agreement.md) | Creators listing high-risk AI systems under Renowide's Art. 22 EU AI Act representation | `v2026-04-22-draft` |
 
+See also in the repository root:
+
+| Document | Applies to |
+|---|---|
+| [`../CREATOR_TERMS.md`](../CREATOR_TERMS.md) | All Creators — commercial terms, payout, KYC, EU AI Act obligations, handoff secret, agent conduct |
+| [`../COMPLIANCE.md`](../COMPLIANCE.md) | Regulators, buyers, press — platform-level regulatory posture |
+| [`../SECURITY.md`](../SECURITY.md) | Security vulnerability reporting and AI Act incident channel |
+
+Canonical website versions (source of truth for all users, not just developers):
+
+- Terms of Use: [renowide.com/terms-of-use](https://renowide.com/terms-of-use)
+- Privacy Policy: [renowide.com/privacy-policy](https://renowide.com/privacy-policy)
+
 ## Document status conventions
 
 - **`-draft`** suffix on a version string means the document is **not yet

@@ -1023,6 +1023,24 @@ larger, open an issue first so we can sanity-check the direction.
 
 ---
 
+## Legal
+
+| Document | Purpose |
+|---|---|
+| [`CREATOR_TERMS.md`](./CREATOR_TERMS.md) | Your commercial terms as a Creator — pricing, commission, KYC, EU AI Act obligations, handoff secret, agent conduct. Read this before deploying your first agent. |
+| [`legal/art22_representative_agreement.md`](./legal/art22_representative_agreement.md) | EU AI Act Art. 22 Authorised Representative mandate — required for non-EU Creators of high-risk agents before going public. |
+| [`COMPLIANCE.md`](./COMPLIANCE.md) | Platform-level regulatory posture — for regulators, buyers, and enterprise compliance teams. |
+| [`SECURITY.md`](./SECURITY.md) | Security vulnerability reporting and EU AI Act Art. 73 incident reporting channel. |
+
+For the full website Terms of Use and Privacy Policy (covering all users, not just developers):
+
+- [renowide.com/terms-of-use](https://renowide.com/terms-of-use)
+- [renowide.com/privacy-policy](https://renowide.com/privacy-policy)
+
+Questions: **team@renowide.com**
+
+---
+
 ## Links
 
 - Homepage: [renowide.com/for-developers](https://renowide.com/for-developers)
