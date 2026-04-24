@@ -43,23 +43,38 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
 import { ManifestCanvasBlockSchema } from "@renowide/types/manifest";
 import { CanvasResponseSchema } from "@renowide/types/canvas";
 
-// Mirror of the CLI's RenowideJsonSchema (packages/cli/src/commands/deploy.ts).
-// Kept in sync with that definition. This is the shape POST /api/v1/agents/publish
-// expects for Persona A / Path C. Persona B YAML uses the CLI's manifest.ts schema.
+function readPackageVersion(): string {
+  try {
+    const pkgPath = fileURLToPath(new URL("../package.json", import.meta.url));
+    const raw = JSON.parse(readFileSync(pkgPath, "utf8"));
+    if (typeof raw.version === "string" && raw.version.length > 0) return raw.version;
+  } catch { /* fallback */ }
+  return "0.0.0+unknown";
+}
+const PACKAGE_VERSION = readPackageVersion();
+
+// Aligned with the CLI's RenowideJsonSchema (packages/cli/src/commands/deploy.ts).
+// TODO: Move to @renowide/types as a shared export to eliminate dual-maintenance.
+// Supports Path A (external), Path C (Canvas Kit v2), and Path D (mcp_client).
 const RenowideJsonSchema = z
   .object({
     name: z.string().min(2).max(80),
     visibility: z.enum(["public", "draft"]).optional().default("public"),
+    protocol: z.enum(["external", "mcp_client"]).optional().default("external"),
     endpoint: z
       .string()
       .url()
       .refine((u) => u.startsWith("https://"), {
         message: "endpoint must use https://",
-      }),
-    price_credits: z.number().int().positive().max(10_000),
+      })
+      .optional(),
+    price_credits: z.number().int().positive().max(10_000).optional(),
     slug: z
       .string()
       .regex(/^[a-z0-9][a-z0-9-]{1,40}[a-z0-9]$/)
@@ -72,6 +87,34 @@ const RenowideJsonSchema = z
     sandbox_endpoint: z.string().url().optional(),
     canvas: ManifestCanvasBlockSchema.optional(),
   })
+  .refine(
+    (d) => d.protocol === "mcp_client" || !!d.endpoint,
+    {
+      message:
+        'endpoint is required for protocol "external". ' +
+        'Add "endpoint": "https://your-agent.com" or switch to ' +
+        '"protocol": "mcp_client" if your agent has no public URL.',
+      path: ["endpoint"],
+    },
+  )
+  .refine(
+    (d) => d.visibility === "draft" || !!d.price_credits,
+    {
+      message:
+        'price_credits is required for public listings. ' +
+        'Set "price_credits": 25 (or any value 1-10000), ' +
+        'or use "visibility": "draft" to save without going live.',
+      path: ["price_credits"],
+    },
+  )
+  .refine(
+    (d) => !(d.protocol === "mcp_client" && d.endpoint),
+    {
+      message:
+        '"mcp_client" agents must NOT have an endpoint. Remove the "endpoint" field.',
+      path: ["endpoint"],
+    },
+  )
   .loose();
 type RenowideJson = z.infer<typeof RenowideJsonSchema>;
 
@@ -113,7 +156,7 @@ function apiBase(): string {
 // HTTP client (compatible with the CLI's api.ts contract)
 // ----------------------------------------------------------------------
 
-const USER_AGENT = `@renowide/mcp-server/0.1.0 (node ${process.version})`;
+const USER_AGENT = `@renowide/mcp-server/${PACKAGE_VERSION} (node ${process.version})`;
 
 class APIError extends Error {
   constructor(
@@ -761,7 +804,7 @@ const RESOURCES = [
 // ----------------------------------------------------------------------
 
 const server = new Server(
-  { name: "@renowide/mcp-server", version: "0.1.0" },
+  { name: "@renowide/mcp-server", version: PACKAGE_VERSION },
   {
     capabilities: {
       tools: {},
@@ -849,13 +892,14 @@ async function dispatch(name: string, args: Record<string, unknown>): Promise<un
     case "renowide_whoami": {
       const token = requireToken();
       const me = await apiRequest<{
-        creator_id: string;
+        id?: string;
+        creator_id?: string;
         email: string;
         scopes?: string[];
       }>("GET", "/api/v1/creator/me", undefined, token);
       return {
         logged_in: true,
-        creator_id: me.creator_id,
+        creator_id: me.creator_id ?? me.id ?? "",
         email: me.email,
         api_base: apiBase(),
         scopes: me.scopes ?? [],
@@ -1054,7 +1098,8 @@ async function dispatch(name: string, args: Record<string, unknown>): Promise<un
       const { limit: lbLimit } = args as { limit?: number };
       const qs = new URLSearchParams();
       if (lbLimit) qs.set("limit", String(lbLimit));
-      const path = `/api/v1/partner/leaderboard${qs.size ? `?${qs}` : ""}`;
+      const qsStr = qs.toString();
+      const path = `/api/v1/partner/leaderboard${qsStr ? `?${qsStr}` : ""}`;
       return apiRequest("GET", path);
     }
 
@@ -1358,31 +1403,39 @@ Full reference: \`docs/canvas-kit-v2/expressions.md\` in the renowide-cli repo.`
     case "renowide://docs/webhook-security":
       return `# HMAC-SHA256 webhook verification
 
-Every Renowide webhook (Persona A hire.created, Canvas Kit v2 action invocations)
-is HMAC-SHA256-signed. You MUST verify before parsing.
+Renowide uses **two signing protocols** — one for Persona A hire webhooks and
+one for Canvas Kit v2. Always check which protocol your route handles.
+
+## 1. Persona A hire.created webhook
+
+Header: \`X-Renowide-Signature: sha256=<hex>\`
+Canonical input: raw request body bytes.
+Also verify: \`X-Renowide-Timestamp\` is within 5 minutes of server time.
 
 **Node.js**:
 \`\`\`ts
 import { createHmac, timingSafeEqual } from "node:crypto";
 
-function verify(raw: string | Buffer, headerSig: string, secret: string): boolean {
-  const expected = createHmac("sha256", secret).update(raw).digest("hex");
-  const got = headerSig.replace(/^sha256=/, "");
-  return got.length === expected.length &&
-    timingSafeEqual(Buffer.from(got), Buffer.from(expected));
+function verifyHireWebhook(rawBody: Buffer, sig: string, ts: string, secret: string): boolean {
+  const tsNum = parseInt(ts, 10);
+  if (Math.abs(Date.now() / 1000 - tsNum) > 300) return false;
+  const expected = createHmac("sha256", secret).update(rawBody).digest("hex");
+  const got = sig.replace(/^sha256=/, "");
+  if (got.length !== expected.length) return false;
+  return timingSafeEqual(Buffer.from(got), Buffer.from(expected));
 }
 \`\`\`
 
-**Python**:
-\`\`\`python
-import hmac, hashlib
-def verify(raw: bytes, header_sig: str, secret: str) -> bool:
-    expected = hmac.new(secret.encode(), raw, hashlib.sha256).hexdigest()
-    got = header_sig.removeprefix("sha256=")
-    return hmac.compare_digest(got, expected)
-\`\`\`
+## 2. Canvas Kit v2 (action POST + canvas GET)
 
-**Rules**:
+Header: \`Renowide-Signature: v1=<64-hex>\`
+Action POST canonical: \`v1:<timestamp>:<raw-body-bytes>\`
+Canvas GET canonical: \`v1:<timestamp>:<slug>:<surface>:<buyerId>:<hireId>:<requestId>\`
+Missing IDs render as \`-\`.
+
+Use \`verifyActionRequest\` / \`verifyCanvasRequest\` from \`@renowide/types/signing\`.
+
+**Rules (both protocols)**:
   - Verify BEFORE parsing the body.
   - Reject timestamps older than 5 minutes (\`X-Renowide-Timestamp\`).
   - Idempotent on \`X-Renowide-Event-Id\` — Renowide retries on 5xx.
@@ -1427,23 +1480,33 @@ subscription + free trial instead.`;
 function personaAWebhookStub(args: ScaffoldArgs): string {
   return `/**
  * Persona A webhook handler for ${args.name}.
- * Verifies Renowide's hire.created signed webhook, provisions the buyer,
- * redirects to your product, and calls /complete when the job finishes.
+ * Verifies Renowide's hire.created signed webhook with HMAC + timestamp,
+ * provisions the buyer, and calls /complete when the job finishes.
  */
 import express from "express";
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 const app = express();
 const SECRET = process.env.RENOWIDE_HANDOFF_SECRET!;
+const MAX_CLOCK_SKEW_SECONDS = 300;
+
+function verifyWebhook(req: express.Request, rawBody: Buffer): boolean {
+  const sig = String(req.header("X-Renowide-Signature") ?? "");
+  const tsHeader = req.header("X-Renowide-Timestamp");
+
+  if (!tsHeader) return false;
+  const ts = Number.parseInt(tsHeader, 10);
+  if (!Number.isFinite(ts)) return false;
+  if (Math.abs(Math.floor(Date.now() / 1000) - ts) > MAX_CLOCK_SKEW_SECONDS) return false;
+
+  const expected = createHmac("sha256", SECRET).update(rawBody).digest("hex");
+  const got = sig.replace(/^sha256=/, "");
+  if (got.length !== expected.length) return false;
+  return timingSafeEqual(Buffer.from(got), Buffer.from(expected));
+}
 
 app.post("/renowide", express.raw({ type: "application/json" }), async (req, res) => {
-  const sig = String(req.header("X-Renowide-Signature") ?? "");
-  const expected = createHmac("sha256", SECRET).update(req.body).digest("hex");
-  const got = sig.replace(/^sha256=/, "");
-  if (
-    got.length !== expected.length ||
-    !timingSafeEqual(Buffer.from(got), Buffer.from(expected))
-  ) {
+  if (!verifyWebhook(req, req.body)) {
     return res.status(401).send("bad signature");
   }
 
@@ -1472,43 +1535,93 @@ function canvasServerStub(args: ScaffoldArgs, tpl: TemplateInfo): string {
  *   GET  /canvas/post_hire.json  — post-hire canvas (status, result)
  *   POST /canvas/actions         — action_button webhook
  *
- * Every request is HMAC-SHA256 signed. Verify before handling.
+ * Every request is HMAC-SHA256 signed with the Renowide-Signature: v1=<hex> protocol.
+ * Verify before handling. See @renowide/types/signing for the canonical format.
  */
 import express from "express";
+import { createHmac, timingSafeEqual } from "node:crypto";
+import { fileURLToPath } from "node:url";
 import fs from "node:fs";
 import path from "node:path";
-import { createHmac, timingSafeEqual } from "node:crypto";
 import { handleAction } from "./actions.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const SECRET = process.env.RENOWIDE_WEBHOOK_SECRET!;
+const MAX_CLOCK_SKEW = 300;
 
-function verifyRequest(req: express.Request, raw: string | Buffer): boolean {
-  const sig = String(req.header("X-Renowide-Signature") ?? "");
-  const expected = createHmac("sha256", SECRET).update(raw).digest("hex");
-  const got = sig.replace(/^sha256=/, "");
-  return (
-    got.length === expected.length &&
-    timingSafeEqual(Buffer.from(got), Buffer.from(expected))
-  );
+function parseSignature(header: string | undefined): string | null {
+  if (!header) return null;
+  const eq = header.indexOf("=");
+  if (eq === -1) return null;
+  const version = header.slice(0, eq);
+  const hex = header.slice(eq + 1);
+  if (version !== "v1" || !/^[0-9a-f]{64}$/.test(hex)) return null;
+  return hex;
 }
 
-// Signed GET — body is empty, so we sign the canonical string
-// \`\${METHOD}\\n\${PATH}\\n\${TIMESTAMP}\` per @renowide/types/signing.
+function verifyTimestamp(tsHeader: string | undefined): number {
+  const ts = Number.parseInt(tsHeader ?? "", 10);
+  if (!Number.isFinite(ts)) throw new Error("missing X-Renowide-Timestamp");
+  if (Math.abs(Math.floor(Date.now() / 1000) - ts) > MAX_CLOCK_SKEW) {
+    throw new Error("clock skew too large");
+  }
+  return ts;
+}
+
+function constantTimeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(Buffer.from(a, "hex"), Buffer.from(b, "hex"));
+}
+
+function verifyCanvasGet(req: express.Request, slug: string, surface: string): boolean {
+  const sig = parseSignature(req.header("Renowide-Signature"));
+  if (!sig) return false;
+  try {
+    const ts = verifyTimestamp(req.header("X-Renowide-Timestamp"));
+    const requestId = req.header("X-Renowide-Request-Id") ?? "";
+    const buyerId = req.header("X-Renowide-Buyer-Id") ?? "-";
+    const hireId = req.header("X-Renowide-Hire-Id") ?? "-";
+    const canonical = \`v1:\${ts}:\${slug}:\${surface}:\${buyerId}:\${hireId}:\${requestId}\`;
+    const expected = createHmac("sha256", SECRET).update(canonical).digest("hex");
+    return constantTimeEqual(sig, expected);
+  } catch { return false; }
+}
+
+function verifyActionPost(req: express.Request, rawBody: Buffer): boolean {
+  const sig = parseSignature(req.header("Renowide-Signature"));
+  if (!sig) return false;
+  try {
+    const ts = verifyTimestamp(req.header("X-Renowide-Timestamp"));
+    const prefix = Buffer.from(\`v1:\${ts}:\`, "utf-8");
+    const mac = createHmac("sha256", SECRET);
+    mac.update(prefix);
+    mac.update(rawBody);
+    const expected = mac.digest("hex");
+    return constantTimeEqual(sig, expected);
+  } catch { return false; }
+}
+
 app.get("/canvas/hire_flow.json", (req, res) => {
-  // For brevity, the signing verification for GET is shown in the docs
-  // resource renowide://docs/webhook-security. This stub just serves.
+  if (!verifyCanvasGet(req, "${args.slug}", "hire_flow")) {
+    return res.status(401).send("bad signature");
+  }
   const body = fs.readFileSync(path.join(__dirname, "..", "canvas/hire_flow.json"), "utf8");
   res.json(JSON.parse(body));
 });
 
 app.get("/canvas/post_hire.json", (req, res) => {
+  if (!verifyCanvasGet(req, "${args.slug}", "post_hire")) {
+    return res.status(401).send("bad signature");
+  }
   const body = fs.readFileSync(path.join(__dirname, "..", "canvas/post_hire.json"), "utf8");
   res.json(JSON.parse(body));
 });
 
 app.post("/canvas/actions", express.raw({ type: "application/json" }), async (req, res) => {
-  if (!verifyRequest(req, req.body)) return res.status(401).send("bad signature");
+  if (!verifyActionPost(req, req.body)) return res.status(401).send("bad signature");
   const event = JSON.parse(req.body.toString("utf8"));
   const response = await handleAction(event);
   res.status(200).json(response);
@@ -1705,8 +1818,8 @@ function canvasTsConfig(): string {
     {
       compilerOptions: {
         target: "ES2022",
-        module: "ES2022",
-        moduleResolution: "bundler",
+        module: "Node16",
+        moduleResolution: "Node16",
         strict: true,
         esModuleInterop: true,
         skipLibCheck: true,
@@ -1791,7 +1904,7 @@ async function main(): Promise<void> {
   const transport = new StdioServerTransport();
   await server.connect(transport);
   // NB: do NOT log to stdout — MCP stdio transport uses stdout as the channel.
-  process.stderr.write("@renowide/mcp-server v0.1.0 connected via stdio\n");
+  process.stderr.write(`@renowide/mcp-server v${PACKAGE_VERSION} connected via stdio\n`);
 }
 
 main().catch((err) => {

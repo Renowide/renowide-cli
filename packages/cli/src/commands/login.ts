@@ -144,9 +144,9 @@ async function loginWithKey(apiBase: string, rawKey: string): Promise<void> {
   console.log(pc.gray(`  validating key ${key.slice(0, 16)}…`));
 
   const api = new RenowideAPI(apiBase, key);
-  let me: { id: string; email: string };
+  let me: { id?: string; creator_id?: string; email: string };
   try {
-    me = await api.get<{ id: string; email: string }>("/api/v1/creator/me");
+    me = await api.get<{ id?: string; creator_id?: string; email: string }>("/api/v1/creator/me");
   } catch (err: any) {
     // 401 is the common case (wrong/revoked key); 403 means the key is
     // valid but lacks the required scope; anything else is surfaced raw
@@ -168,10 +168,11 @@ async function loginWithKey(apiBase: string, rawKey: string): Promise<void> {
     throw err;
   }
 
+  const creatorId = me.creator_id ?? me.id ?? "";
   saveCredentials({
     apiBase,
     token: key,
-    creatorId: me.id,
+    creatorId,
     creatorEmail: me.email,
   });
 
