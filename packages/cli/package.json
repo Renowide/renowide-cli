@@ -44,7 +44,7 @@
   },
   "dependencies": {
     "@renowide/types": "0.2.2",
-    "commander": "^14.0.3",
+    "commander": "^15.0.0",
     "picocolors": "^1.0.1",
     "prompts": "^2.4.2",
     "yaml": "^2.5.0",
